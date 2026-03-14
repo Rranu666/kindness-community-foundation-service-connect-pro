@@ -1,0 +1,16 @@
+{
+  "name": "Service Connect Pro",
+  "short_name": "ServiceConnect",
+  "description": "Find verified AI service providers by Kindness Community",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d1f",
+  "theme_color": "#e8356d",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

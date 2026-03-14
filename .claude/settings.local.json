@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ANDROID_HOME=\"$HOME/Library/Android/sdk\" PATH=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin:$HOME/Library/Android/sdk/platform-tools:$PATH\" /Users/appypie/Downloads/kindness-community-foundation-service-connect-pro/android/gradlew -p /Users/appypie/Downloads/kindness-community-foundation-service-connect-pro/android assembleDebug)",
+      "Bash(bash -c 'export JAVA_HOME=\"\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\"\" && export ANDROID_HOME=\"\"$HOME/Library/Android/sdk\"\" && export PATH=\"\"$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH\"\" && cd /Users/appypie/Downloads/kindness-community-foundation-service-connect-pro/android && chmod +x gradlew && ./gradlew assembleDebug 2>&1 | tail -40')",
+      "Bash(cp /Users/appypie/Downloads/kindness-community-foundation-service-connect-pro/android/app/build/outputs/apk/debug/app-debug.apk ~/Desktop/ServiceConnectPro.apk)",
+      "Read(//Users/appypie/Desktop/**)",
+      "Bash(bash -c 'npx vite build 2>&1')",
+      "Bash(find /Users/appypie/Downloads/kindness-community-foundation-service-connect-pro/src -name *Toast* -o -name *toast* -o -name *i18n* -o -name *language* -o -name *chat* -o -name *ai*)",
+      "Bash(ls -la /Users/appypie/Downloads/kindness-community-foundation-service-connect-pro/src/components/*.jsx)",
+      "Bash(npm run:*)",
+      "Bash(npx netlify-cli:*)"
+    ]
+  }
+}
