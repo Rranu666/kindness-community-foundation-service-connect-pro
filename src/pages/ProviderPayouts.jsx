@@ -108,27 +108,27 @@ export default function ProviderPayouts() {
 
   if (!user) {
     return (
-      <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+      <div style={{ background: '#0f0900' }} className="min-h-screen py-10">
         <div className="max-w-4xl mx-auto px-4"><Skeleton className="h-96" /></div>
       </div>
     );
   }
 
   return (
-    <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+    <div style={{ background: '#0f0900' }} className="min-h-screen py-6 sm:py-10">
       <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-white mb-2">Payouts & Earnings</h1>
-        <p className="text-sm mb-8" style={{ color: 'rgba(255,255,255,0.5)' }}>Platform commission: {COMMISSION_RATE}%</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Payouts & Earnings</h1>
+        <p className="text-sm mb-6 sm:mb-8" style={{ color: 'rgba(255,255,255,0.5)' }}>Platform commission: {COMMISSION_RATE}%</p>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 sm:mb-8">
           {[
-            { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, icon: TrendingUp, color: '#e8356d' },
+            { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, icon: TrendingUp, color: '#f97316' },
             { label: 'Commission Paid', value: `$${totalCommission.toFixed(2)}`, icon: Percent, color: '#f59e0b' },
             { label: 'Net Earnings', value: `$${totalEarnings.toFixed(2)}`, icon: DollarSign, color: '#10b981' },
             { label: 'Available', value: `$${Math.max(0, availableBalance).toFixed(2)}`, icon: Banknote, color: '#3b82f6' },
           ].map(({ label, value, icon: Icon, color }) => (
-            <Card key={label} style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+            <Card key={label} style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
               <CardContent className="p-4">
                 <Icon className="w-5 h-5 mb-2" style={{ color }} />
                 <p className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</p>
@@ -139,7 +139,7 @@ export default function ProviderPayouts() {
         </div>
 
         {/* Withdraw Button */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
           <div>
             <p className="text-white font-semibold text-lg">Available Balance: <span style={{ color: '#10b981' }}>${Math.max(0, availableBalance).toFixed(2)}</span></p>
             {pendingPayouts > 0 && (
@@ -148,11 +148,11 @@ export default function ProviderPayouts() {
           </div>
           <Dialog open={openWithdraw} onOpenChange={setOpenWithdraw}>
             <DialogTrigger asChild>
-              <Button style={{ background: '#e8356d' }} className="text-white" disabled={availableBalance < 10}>
+              <Button style={{ background: '#f97316' }} className="text-white" disabled={availableBalance < 10}>
                 <Banknote className="w-4 h-4 mr-2" /> Withdraw Funds
               </Button>
             </DialogTrigger>
-            <DialogContent style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.3)' }}>
+            <DialogContent style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)' }}>
               <DialogHeader>
                 <DialogTitle className="text-white">Request Withdrawal</DialogTitle>
               </DialogHeader>
@@ -160,10 +160,10 @@ export default function ProviderPayouts() {
                 <div>
                   <Label className="text-white">Withdrawal Method</Label>
                   <Select value={withdrawMethod} onValueChange={setWithdrawMethod}>
-                    <SelectTrigger style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}>
+                    <SelectTrigger style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent style={{ background: '#13132a' }}>
+                    <SelectContent style={{ background: '#140b00' }}>
                       <SelectItem value="bank">Bank Transfer</SelectItem>
                       <SelectItem value="mobile_money">Mobile Money</SelectItem>
                       <SelectItem value="paypal">PayPal</SelectItem>
@@ -179,7 +179,7 @@ export default function ProviderPayouts() {
                       <Input value={bankDetails.bank_name}
                         onChange={e => setBankDetails({ ...bankDetails, bank_name: e.target.value })}
                         placeholder="e.g. HDFC Bank"
-                        style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                        style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                         className="placeholder:text-gray-500" />
                     </div>
                     <div>
@@ -187,7 +187,7 @@ export default function ProviderPayouts() {
                       <Input value={bankDetails.bank_account}
                         onChange={e => setBankDetails({ ...bankDetails, bank_account: e.target.value })}
                         placeholder="Account number"
-                        style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                        style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                         className="placeholder:text-gray-500" />
                     </div>
                   </>
@@ -199,7 +199,7 @@ export default function ProviderPayouts() {
                     <Input value={bankDetails.bank_account}
                       onChange={e => setBankDetails({ ...bankDetails, bank_account: e.target.value })}
                       placeholder={withdrawMethod === 'paypal' ? 'you@paypal.com' : withdrawMethod === 'upi' ? 'yourname@upi' : '+91 99999 99999'}
-                      style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                      style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                       className="placeholder:text-gray-500" />
                   </div>
                 )}
@@ -210,12 +210,12 @@ export default function ProviderPayouts() {
                     onChange={e => setWithdrawAmount(e.target.value)}
                     placeholder={`Max: $${availableBalance.toFixed(2)}`}
                     max={availableBalance}
-                    style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                    style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                     className="placeholder:text-gray-500" />
                   <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Minimum withdrawal: $10</p>
                 </div>
 
-                <Button className="w-full text-white" style={{ background: '#e8356d' }}
+                <Button className="w-full text-white" style={{ background: '#f97316' }}
                   onClick={() => requestPayoutMutation.mutate()}
                   disabled={requestPayoutMutation.isPending || !withdrawAmount}>
                   {requestPayoutMutation.isPending ? 'Processing...' : 'Request Withdrawal'}
@@ -232,7 +232,7 @@ export default function ProviderPayouts() {
           </TabsList>
 
           <TabsContent value="history">
-            <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+            <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
               <CardContent className="pt-4">
                 {payoutsLoading ? (
                   <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16" />)}</div>
@@ -241,7 +241,7 @@ export default function ProviderPayouts() {
                     {payouts.map((payout) => (
                       <div key={payout.id} className="flex items-center justify-between p-4 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
                         <div className="flex items-center gap-3">
-                          <Banknote className="w-5 h-5" style={{ color: '#e8356d' }} />
+                          <Banknote className="w-5 h-5" style={{ color: '#f97316' }} />
                           <div>
                             <p className="text-white font-semibold">${payout.amount}</p>
                             <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
@@ -261,7 +261,7 @@ export default function ProviderPayouts() {
           </TabsContent>
 
           <TabsContent value="earnings">
-            <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+            <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
               <CardHeader>
                 <CardTitle className="text-white text-base">Commission Breakdown</CardTitle>
               </CardHeader>

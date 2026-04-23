@@ -47,7 +47,7 @@ export default function ChatWithCustomer({ open, onClose, order, senderEmail }) 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent style={{ background: '#13132a', borderColor: 'rgba(232,53,109,0.3)' }} className="border max-w-md">
+      <DialogContent style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.3)' }} className="border max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">
             Chat — {order?.customer_name}
@@ -69,7 +69,7 @@ export default function ChatWithCustomer({ open, onClose, order, senderEmail }) 
               <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                 <div className="max-w-[80%] px-3 py-2 rounded-xl text-sm"
                   style={{
-                    background: isMe ? '#e8356d' : 'rgba(255,255,255,0.1)',
+                    background: isMe ? '#f97316' : 'rgba(255,255,255,0.1)',
                     color: '#fff',
                     borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px'
                   }}>
@@ -87,11 +87,11 @@ export default function ChatWithCustomer({ open, onClose, order, senderEmail }) 
             onChange={e => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
-            style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+            style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
             className="flex-1 placeholder:text-gray-500"
           />
           <Button onClick={sendMessage} disabled={sending || !message.trim()}
-            style={{ background: '#e8356d' }} className="text-white px-3">
+            style={{ background: '#f97316' }} className="text-white px-3">
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
         </div>

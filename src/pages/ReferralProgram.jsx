@@ -42,7 +42,7 @@ export default function ReferralProgram() {
 
   if (!user) {
     return (
-      <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+      <div style={{ background: '#0f0900' }} className="min-h-screen py-10">
         <div className="max-w-4xl mx-auto px-4">
           <Skeleton className="h-96" />
         </div>
@@ -51,26 +51,26 @@ export default function ReferralProgram() {
   }
 
   return (
-    <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+    <div style={{ background: '#0f0900' }} className="min-h-screen py-6 sm:py-10">
       <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-white mb-2">Referral Program</h1>
-        <p style={{ color: 'rgba(255,255,255,0.6)' }} className="mb-8">Earn rewards by inviting friends and service providers</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Referral Program</h1>
+        <p style={{ color: 'rgba(255,255,255,0.6)' }} className="mb-6 sm:mb-8">Earn rewards by inviting friends and service providers</p>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-8">
+          <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>Total Earnings</p>
                   <p className="text-3xl font-bold text-white mt-2">${totalEarnings.toFixed(2)}</p>
                 </div>
-                <TrendingUp className="w-8 h-8" style={{ color: '#e8356d' }} />
+                <TrendingUp className="w-8 h-8" style={{ color: '#f97316' }} />
               </div>
             </CardContent>
           </Card>
 
-          <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+          <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
@@ -82,7 +82,7 @@ export default function ReferralProgram() {
             </CardContent>
           </Card>
 
-          <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+          <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
@@ -99,7 +99,7 @@ export default function ReferralProgram() {
         {referralCode && <ReferralCard code={referralCode} earnings={totalEarnings} />}
 
         {/* Referrals List */}
-        <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }} className="mt-8">
+        <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }} className="mt-8">
           <CardHeader>
             <CardTitle className="text-white">Your Referrals</CardTitle>
           </CardHeader>
@@ -112,7 +112,7 @@ export default function ReferralProgram() {
               </div>
             ) : referrals.length > 0 ? (
               <Tabs defaultValue="completed" className="w-full">
-                <TabsList className="grid w-full grid-cols-2" style={{ background: 'rgba(232,53,109,0.1)' }}>
+                <TabsList className="grid w-full grid-cols-2" style={{ background: 'rgba(249,115,22,0.1)' }}>
                   <TabsTrigger value="completed">Completed</TabsTrigger>
                   <TabsTrigger value="pending">Pending</TabsTrigger>
                 </TabsList>
@@ -120,7 +120,7 @@ export default function ReferralProgram() {
                 <TabsContent value="completed" className="space-y-3 mt-4">
                   {completedReferrals.length > 0 ? (
                     completedReferrals.map(ref => (
-                      <div key={ref.id} className="p-4 rounded-lg" style={{ background: 'rgba(232,53,109,0.05)' }}>
+                      <div key={ref.id} className="p-4 rounded-lg" style={{ background: 'rgba(249,115,22,0.05)' }}>
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-white font-semibold">{ref.referred_email}</p>

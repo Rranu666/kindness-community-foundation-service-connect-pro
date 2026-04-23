@@ -27,7 +27,7 @@ export default function Logo({ size = 'md' }) {
       style={{ display: 'block', overflow: 'visible' }}
     >
       {/* Icon background */}
-      <rect x={pad} y={pad} width={s.iconSize} height={s.iconSize} rx="8" fill="#e8356d" />
+      <rect x={pad} y={pad} width={s.iconSize} height={s.iconSize} rx="8" fill="#f97316" />
       {/* Shield overlay */}
       <path
         d={`M${pad + s.iconSize / 2} ${pad + s.iconSize * 0.16}
@@ -67,7 +67,7 @@ export default function Logo({ size = 'md' }) {
         fontFamily="Georgia, 'Times New Roman', serif"
         fontStyle="italic"
         fontSize={s.subSize}
-        fill="#e8356d"
+        fill="#f97316"
         letterSpacing="0.3"
       >
         by Kindness Community

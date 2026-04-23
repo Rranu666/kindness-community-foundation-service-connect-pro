@@ -7,13 +7,13 @@ export default function PlanCard({ plan, isCurrentPlan, onSelect }) {
   return (
     <Card
       style={{
-        background: isCurrentPlan ? 'rgba(232,53,109,0.15)' : '#13132a',
-        border: isCurrentPlan ? '2px solid #e8356d' : '1px solid rgba(232,53,109,0.2)'
+        background: isCurrentPlan ? 'rgba(249,115,22,0.15)' : '#140b00',
+        border: isCurrentPlan ? '2px solid #f97316' : '1px solid rgba(249,115,22,0.2)'
       }}
       className="relative"
     >
       {isCurrentPlan && (
-        <div className="absolute -top-3 -right-3 px-3 py-1 rounded-full text-xs font-bold" style={{ background: '#e8356d', color: '#fff' }}>
+        <div className="absolute -top-3 -right-3 px-3 py-1 rounded-full text-xs font-bold" style={{ background: '#f97316', color: '#fff' }}>
           Current
         </div>
       )}
@@ -37,7 +37,7 @@ export default function PlanCard({ plan, isCurrentPlan, onSelect }) {
           </p>
           {plan.features?.map((feature, idx) => (
             <div key={idx} className="flex items-start gap-2">
-              <Check className="w-4 h-4 mt-0.5" style={{ color: '#e8356d', flexShrink: 0 }} />
+              <Check className="w-4 h-4 mt-0.5" style={{ color: '#f97316', flexShrink: 0 }} />
               <span className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 {feature}
               </span>
@@ -52,7 +52,7 @@ export default function PlanCard({ plan, isCurrentPlan, onSelect }) {
 
         <Button
           className="w-full text-white"
-          style={{ background: isCurrentPlan ? '#666' : '#e8356d' }}
+          style={{ background: isCurrentPlan ? '#666' : '#f97316' }}
           disabled={isCurrentPlan}
           onClick={() => !isCurrentPlan && onSelect(plan.id)}
         >

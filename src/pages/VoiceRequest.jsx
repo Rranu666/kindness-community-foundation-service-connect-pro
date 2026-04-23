@@ -16,8 +16,8 @@ import VoiceOrb from '@/components/voice/VoiceOrb';
 import AIInterpretationCard from '@/components/voice/AIInterpretationCard';
 import ProviderMatchList from '@/components/voice/ProviderMatchList';
 
-const PINK = '#e8356d';
-const CYAN = '#00d4ff';
+const PINK = '#f97316';
+const CYAN = '#fbbf24';
 
 const FALLBACK_CATEGORIES = [
   { id: 'ai-automation', name: 'AI & Automation' },
@@ -217,12 +217,12 @@ Extract and return:
   };
 
   return (
-    <div className="min-h-screen py-8 px-4" style={{ background: '#0d0d1f' }}>
+    <div className="min-h-screen py-6 sm:py-8 px-4" style={{ background: '#0f0900' }}>
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-4 text-sm font-medium" style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.3)', color: CYAN }}>
+        <div className="text-center mb-7 sm:mb-10">
+          <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-4 text-sm font-medium" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: CYAN }}>
             <Sparkles className="w-4 h-4" /> AI-Powered Voice Request
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
@@ -292,7 +292,7 @@ Extract and return:
         {/* PHASE: PROCESSING */}
         {phase === 'processing' && (
           <div className="text-center py-16">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse" style={{ background: 'rgba(0,212,255,0.15)', border: '2px solid rgba(0,212,255,0.3)' }}>
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse" style={{ background: 'rgba(251,191,36,0.15)', border: '2px solid rgba(251,191,36,0.3)' }}>
               <Brain className="w-10 h-10" style={{ color: CYAN }} />
             </div>
             <h3 className="text-xl font-bold text-white mb-2">AI is analyzing your request...</h3>
@@ -327,7 +327,7 @@ Extract and return:
                 />
 
                 {/* Contact form */}
-                <div className="rounded-2xl p-6 space-y-4" style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+                <div className="rounded-2xl p-6 space-y-4" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
                   <h3 className="font-bold text-white flex items-center gap-2">
                     <Phone className="w-4 h-4" style={{ color: PINK }} />
                     Your Contact Details
@@ -335,7 +335,7 @@ Extract and return:
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
                     Selected providers ({selectedProviders.length}) will be notified and asked to reach out to you.
                   </p>
-                  <div className="grid sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <Input value={userInfo.name} onChange={e => setUserInfo(i => ({ ...i, name: e.target.value }))}
                       placeholder="Your name *" className="h-11 rounded-xl text-white border-white/20 bg-white/5" />
                     <Input value={userInfo.phone} onChange={e => setUserInfo(i => ({ ...i, phone: e.target.value }))}
@@ -357,7 +357,7 @@ Extract and return:
                 </div>
               </>
             ) : (
-              <div className="text-center py-10 rounded-2xl" style={{ background: '#13132a', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="text-center py-10 rounded-2xl" style={{ background: '#140b00', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-40" style={{ color: PINK }} />
                 <p className="text-white font-medium mb-2">No providers found in this category yet</p>
                 <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>Be the first to list services in this area</p>
@@ -372,7 +372,7 @@ Extract and return:
         {/* PHASE: CONTACTING */}
         {phase === 'contacting' && (
           <div className="text-center py-16">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse" style={{ background: 'rgba(232,53,109,0.15)', border: '2px solid rgba(232,53,109,0.3)' }}>
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse" style={{ background: 'rgba(249,115,22,0.15)', border: '2px solid rgba(249,115,22,0.3)' }}>
               <Send className="w-10 h-10" style={{ color: PINK }} />
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Notifying providers...</h3>
@@ -383,7 +383,7 @@ Extract and return:
         {/* PHASE: DONE */}
         {phase === 'done' && (
           <div className="space-y-6">
-            <div className="text-center py-10 rounded-3xl" style={{ background: '#13132a', border: '1px solid rgba(16,185,129,0.3)' }}>
+            <div className="text-center py-10 rounded-3xl" style={{ background: '#140b00', border: '1px solid rgba(16,185,129,0.3)' }}>
               <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: 'rgba(16,185,129,0.15)' }}>
                 <CheckCircle className="w-10 h-10" style={{ color: '#10b981' }} />
               </div>

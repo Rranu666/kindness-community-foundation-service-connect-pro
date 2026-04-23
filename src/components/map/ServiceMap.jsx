@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
 export default function ServiceMap({ providers, height = '400px' }) {
   if (!providers?.length) {
     return (
-      <div style={{ height, background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }} className="rounded-lg flex items-center justify-center">
+      <div style={{ height, background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }} className="rounded-lg flex items-center justify-center">
         <p style={{ color: 'rgba(255,255,255,0.6)' }}>No location data available</p>
       </div>
     );
@@ -28,7 +28,7 @@ export default function ServiceMap({ providers, height = '400px' }) {
     <MapContainer
       center={[defaultLat, defaultLng]}
       zoom={12}
-      style={{ height, borderRadius: '8px', border: '1px solid rgba(232,53,109,0.2)' }}
+      style={{ height, borderRadius: '8px', border: '1px solid rgba(249,115,22,0.2)' }}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -45,7 +45,7 @@ export default function ServiceMap({ providers, height = '400px' }) {
               <div className="text-sm">
                 <p className="font-semibold">{provider.business_name}</p>
                 <p className="text-xs" style={{ color: '#666' }}>{provider.location}</p>
-                <p className="text-xs font-semibold" style={{ color: '#e8356d' }}>⭐ {provider.rating}</p>
+                <p className="text-xs font-semibold" style={{ color: '#f97316' }}>⭐ {provider.rating}</p>
               </div>
             </Popup>
           </Marker>

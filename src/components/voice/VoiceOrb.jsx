@@ -1,8 +1,8 @@
 import React from 'react';
 import { Mic, MicOff, AlertCircle } from 'lucide-react';
 
-const PINK = '#e8356d';
-const CYAN = '#00d4ff';
+const PINK = '#f97316';
+const CYAN = '#fbbf24';
 
 export default function VoiceOrb({ phase, transcript, isSupported, onStart, onStop }) {
   const isListening = phase === 'listening';
@@ -38,9 +38,9 @@ export default function VoiceOrb({ phase, transcript, isSupported, onStart, onSt
           style={{
             background: isListening
               ? `radial-gradient(circle, ${PINK}, #c0134f)`
-              : `radial-gradient(circle, #1e1e3f, #13132a)`,
+              : `radial-gradient(circle, #1e0e00, #140b00)`,
             border: `3px solid ${isListening ? PINK : 'rgba(255,255,255,0.15)'}`,
-            boxShadow: isListening ? `0 0 40px rgba(232,53,109,0.5)` : `0 0 20px rgba(0,0,0,0.5)`,
+            boxShadow: isListening ? `0 0 40px rgba(249,115,22,0.5)` : `0 0 20px rgba(0,0,0,0.5)`,
             transform: isListening ? 'scale(1.05)' : 'scale(1)',
           }}
         >

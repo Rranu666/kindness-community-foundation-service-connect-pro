@@ -3,7 +3,7 @@ import { X, Tag, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
-const PINK = '#e8356d';
+const PINK = '#f97316';
 
 const PROMOS = [
   {
@@ -11,8 +11,8 @@ const PROMOS = [
     title: 'First Booking? Get 20% Off!',
     description: 'Use code WELCOME20 on your first service booking.',
     code: 'WELCOME20',
-    color: 'linear-gradient(135deg, rgba(232,53,109,0.2) 0%, rgba(139,92,246,0.2) 100%)',
-    border: 'rgba(232,53,109,0.4)',
+    color: 'linear-gradient(135deg, rgba(249,115,22,0.2) 0%, rgba(239,68,68,0.2) 100%)',
+    border: 'rgba(249,115,22,0.4)',
   },
   {
     id: 2,

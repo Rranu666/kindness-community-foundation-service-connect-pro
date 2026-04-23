@@ -78,7 +78,7 @@ export default function WalletPage() {
 
   if (walletLoading) {
     return (
-      <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+      <div style={{ background: '#0f0900' }} className="min-h-screen py-10">
         <div className="max-w-4xl mx-auto px-4">
           <Skeleton className="h-40 mb-8" />
           <Skeleton className="h-96" />
@@ -88,29 +88,29 @@ export default function WalletPage() {
   }
 
   return (
-    <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+    <div style={{ background: '#0f0900' }} className="min-h-screen py-6 sm:py-10">
       <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-white mb-8">My Wallet</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8">My Wallet</h1>
 
         {/* Wallet Balance */}
-        <Card style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #0d0d1f 100%)', border: '1px solid rgba(232,53,109,0.3)' }} className="mb-8">
-          <CardContent className="pt-8 pb-8">
-            <div className="flex items-start justify-between">
+        <Card style={{ background: 'linear-gradient(135deg, #1a0c00 0%, #0f0900 100%)', border: '1px solid rgba(249,115,22,0.3)' }} className="mb-6 sm:mb-8">
+          <CardContent className="pt-6 sm:pt-8 pb-6 sm:pb-8">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div>
                 <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>Wallet Balance</p>
-                  <h2 className="text-4xl font-bold text-white mt-2">${(wallet?.balance || 0).toFixed(2)}</h2>
-                <p className="text-sm mt-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                  Total Added: ${(wallet?.total_added || 0).toFixed(2)} | Total Spent: ${(wallet?.total_spent || 0).toFixed(2)}
+                  <h2 className="text-3xl sm:text-4xl font-bold text-white mt-2">${(wallet?.balance || 0).toFixed(2)}</h2>
+                <p className="text-xs sm:text-sm mt-3 sm:mt-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  Added: ${(wallet?.total_added || 0).toFixed(2)} · Spent: ${(wallet?.total_spent || 0).toFixed(2)}
                 </p>
               </div>
               <Dialog open={openAddMoney} onOpenChange={setOpenAddMoney}>
                 <DialogTrigger asChild>
-                  <Button size="lg" style={{ background: '#e8356d' }} className="text-white hover:opacity-90">
+                  <Button size="lg" style={{ background: '#f97316' }} className="text-white hover:opacity-90 w-full sm:w-auto">
                     <Plus className="w-5 h-5 mr-2" />
                     Add Money
                   </Button>
                 </DialogTrigger>
-                <DialogContent style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.3)' }}>
+                <DialogContent style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)' }}>
                   <DialogHeader>
                     <DialogTitle className="text-white">Add Money to Wallet</DialogTitle>
                   </DialogHeader>
@@ -122,13 +122,13 @@ export default function WalletPage() {
                         placeholder="Enter amount"
                         value={addMoneyAmount}
                         onChange={(e) => setAddMoneyAmount(e.target.value)}
-                        style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                        style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                         className="text-white placeholder:text-gray-500"
                       />
                     </div>
                     <Button
                       className="w-full text-white"
-                      style={{ background: '#e8356d' }}
+                      style={{ background: '#f97316' }}
                       onClick={() => addMoneyMutation.mutate()}
                       disabled={addMoneyMutation.isPending || !addMoneyAmount}
                     >
@@ -142,7 +142,7 @@ export default function WalletPage() {
         </Card>
 
         {/* Transaction History */}
-        <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+        <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
           <CardHeader>
             <CardTitle className="text-white">Transaction History</CardTitle>
           </CardHeader>
@@ -156,7 +156,7 @@ export default function WalletPage() {
             ) : transactions.length > 0 ? (
               <div className="space-y-3">
                 {transactions.map((tx) => (
-                  <div key={tx.id} className="flex items-center justify-between p-4 rounded-lg" style={{ background: 'rgba(232,53,109,0.05)' }}>
+                  <div key={tx.id} className="flex items-center justify-between p-4 rounded-lg" style={{ background: 'rgba(249,115,22,0.05)' }}>
                     <div className="flex items-center gap-3 flex-1">
                       {tx.type === 'credit' ? (
                         <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.2)' }}>

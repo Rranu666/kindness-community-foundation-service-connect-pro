@@ -4,27 +4,31 @@ import { createPageUrl } from '@/utils';
 import { Star, MapPin, Clock, BadgeCheck } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
+const slugify = (name) =>
+  name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '';
+
 export default function ProviderCard({ provider }) {
+  const slug = slugify(provider.business_name);
   return (
     <Link
-      to={createPageUrl(`ProviderProfile?id=${provider.id}`)}
+      to={createPageUrl(`ProviderProfile?p=${slug}&id=${provider.id}`)}
       className="group rounded-2xl overflow-hidden transition-all duration-300"
-      style={{ background: '#13132a', border: '1px solid rgba(255,255,255,0.06)' }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(232,53,109,0.4)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(232,53,109,0.1)'; }}
+      style={{ background: '#140b00', border: '1px solid rgba(255,255,255,0.06)' }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(249,115,22,0.1)'; }}
       onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.boxShadow = 'none'; }}
     >
       <div className="relative h-40">
         {provider.cover_image ? (
           <img src={provider.cover_image} alt="" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #13132a 100%)' }} />
+          <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #1a0c00 0%, #140b00 100%)' }} />
         )}
         <div className="absolute -bottom-10 left-6">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden" style={{ border: '3px solid #13132a' }}>
-            {provider.profile_image ? (
-              <img src={provider.profile_image} alt={provider.business_name} className="w-full h-full object-cover" />
+          <div className="w-20 h-20 rounded-2xl overflow-hidden" style={{ border: '3px solid #140b00' }}>
+            {(provider.avatar_url || provider.profile_image) ? (
+              <img src={provider.avatar_url || provider.profile_image} alt={provider.business_name} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #7c3aed, #e8356d)' }}>
+              <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ef4444, #f97316)' }}>
                 <span className="text-2xl font-bold text-white">{provider.business_name?.charAt(0)}</span>
               </div>
             )}
@@ -68,7 +72,7 @@ export default function ProviderCard({ provider }) {
           ) : (
             <span className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>Contact for pricing</span>
           )}
-          {provider.experience_years && (
+          {provider.experience_years > 0 && (
             <div className="flex items-center gap-1 text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
               <Clock className="w-4 h-4" />
               {provider.experience_years}+ yrs

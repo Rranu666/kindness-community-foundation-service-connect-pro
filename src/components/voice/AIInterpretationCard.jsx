@@ -2,7 +2,7 @@ import React from 'react';
 import { Brain, Tag, Clock, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-const CYAN = '#00d4ff';
+const CYAN = '#fbbf24';
 
 const URGENCY_CONFIG = {
   immediate: { label: 'Immediate', color: '#ef4444' },
@@ -16,7 +16,7 @@ export default function AIInterpretationCard({ interpretation }) {
   const urgency = URGENCY_CONFIG[interpretation.urgency] || URGENCY_CONFIG.flexible;
 
   return (
-    <div className="rounded-2xl p-5 space-y-4" style={{ background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.2)' }}>
+    <div className="rounded-2xl p-5 space-y-4" style={{ background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.2)' }}>
       <div className="flex items-center gap-2 mb-1">
         <Brain className="w-4 h-4" style={{ color: CYAN }} />
         <span className="text-sm font-semibold" style={{ color: CYAN }}>AI Interpretation</span>

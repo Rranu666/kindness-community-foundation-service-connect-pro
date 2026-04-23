@@ -1,15 +1,15 @@
-functionsDirectory = "/Users/appypie/Downloads/kindness-community-foundation-service-connect-pro/netlify/functions"
+functionsDirectory = "/Users/manoj/Downloads/code/kindness-community-foundation-service-connect-pro/netlify/functions"
 functionsDirectoryOrigin = "config-v1"
 redirectsOrigin = "config"
 plugins = []
 headers = []
 
 [build]
-publish = "/Users/appypie/Downloads/kindness-community-foundation-service-connect-pro/dist"
+publish = "/Users/manoj/Downloads/code/kindness-community-foundation-service-connect-pro/dist"
 publishOrigin = "config"
 commandOrigin = "config"
 command = "npm run build"
-functions = "/Users/appypie/Downloads/kindness-community-foundation-service-connect-pro/netlify/functions"
+functions = "/Users/manoj/Downloads/code/kindness-community-foundation-service-connect-pro/netlify/functions"
 
 [build.environment]
 

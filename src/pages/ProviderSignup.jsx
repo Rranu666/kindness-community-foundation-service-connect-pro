@@ -132,8 +132,8 @@ export default function ProviderSignup() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#0d0d1f' }}>
-        <div className="max-w-md w-full text-center rounded-2xl p-10" style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.25)' }}>
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#0f0900' }}>
+        <div className="max-w-md w-full text-center rounded-2xl p-10" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.25)' }}>
           <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: 'rgba(16,185,129,0.15)' }}>
             <CheckCircle className="w-10 h-10 text-emerald-400" />
           </div>
@@ -145,7 +145,7 @@ export default function ProviderSignup() {
             You'll receive a notification once your account is verified. You can start adding services in the meantime.
           </p>
           <Link to={createPageUrl('ProviderDashboard')}>
-            <Button className="text-white border-0" style={{ background: '#e8356d' }}>Go to Dashboard</Button>
+            <Button className="text-white border-0" style={{ background: '#f97316' }}>Go to Dashboard</Button>
           </Link>
         </div>
       </div>
@@ -153,7 +153,7 @@ export default function ProviderSignup() {
   }
 
   return (
-    <div className="min-h-screen py-10" style={{ background: '#0d0d1f' }}>
+    <div className="min-h-screen py-10" style={{ background: '#0f0900' }}>
       <div className="max-w-2xl mx-auto px-4">
         <Link to={createPageUrl('Home')} className="inline-flex items-center text-sm mb-6" style={{ color: 'rgba(255,255,255,0.55)' }}>
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Home
@@ -166,23 +166,23 @@ export default function ProviderSignup() {
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
                   style={{
-                    background: step >= s.id ? '#e8356d' : 'rgba(255,255,255,0.1)',
+                    background: step >= s.id ? '#f97316' : 'rgba(255,255,255,0.1)',
                     color: step >= s.id ? '#fff' : 'rgba(255,255,255,0.4)'
                   }}>
                   {step > s.id ? <CheckCircle className="w-4 h-4" /> : s.id}
                 </div>
-                <span className="text-sm hidden sm:block" style={{ color: step === s.id ? '#e8356d' : 'rgba(255,255,255,0.45)' }}>
+                <span className="text-sm hidden sm:block" style={{ color: step === s.id ? '#f97316' : 'rgba(255,255,255,0.45)' }}>
                   {s.label}
                 </span>
               </div>
               {idx < STEPS.length - 1 && (
-                <div className="flex-1 h-px" style={{ background: step > s.id ? '#e8356d' : 'rgba(255,255,255,0.1)' }} />
+                <div className="flex-1 h-px" style={{ background: step > s.id ? '#f97316' : 'rgba(255,255,255,0.1)' }} />
               )}
             </React.Fragment>
           ))}
         </div>
 
-        <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+        <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
           <CardHeader>
             <CardTitle className="text-white">{STEPS[step - 1].label}</CardTitle>
             <CardDescription style={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -200,11 +200,11 @@ export default function ProviderSignup() {
                 <div className="flex justify-center mb-2">
                   <label className="cursor-pointer">
                     <div className="w-24 h-24 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden"
-                      style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(232,53,109,0.3)' }}>
+                      style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(249,115,22,0.3)' }}>
                       {profileImage ? (
                         <img src={profileImage} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <Camera className="w-8 h-8" style={{ color: '#e8356d' }} />
+                        <Camera className="w-8 h-8" style={{ color: '#f97316' }} />
                       )}
                     </div>
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
@@ -212,36 +212,36 @@ export default function ProviderSignup() {
                   </label>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-white">Business Name *</Label>
                     <Input value={formData.business_name} onChange={e => setFormData({...formData, business_name: e.target.value})}
                       placeholder="Your Business Name"
-                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                       className="placeholder:text-white/30" />
                   </div>
                   <div>
                     <Label className="text-white">Owner Name *</Label>
                     <Input value={formData.owner_name} onChange={e => setFormData({...formData, owner_name: e.target.value})}
                       placeholder="Your Full Name"
-                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                       className="placeholder:text-white/30" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-white">Email *</Label>
                     <Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
                       placeholder="email@example.com"
-                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                       className="placeholder:text-white/30" />
                   </div>
                   <div>
                     <Label className="text-white">Phone</Label>
                     <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})}
                       placeholder="+1 234 567 890"
-                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                       className="placeholder:text-white/30" />
                   </div>
                 </div>
@@ -249,7 +249,7 @@ export default function ProviderSignup() {
                 <div>
                   <Label className="text-white">Service Category *</Label>
                   <Select value={formData.category_id} onValueChange={v => setFormData({...formData, category_id: v})}>
-                    <SelectTrigger style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}>
+                    <SelectTrigger style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}>
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -258,19 +258,19 @@ export default function ProviderSignup() {
                   </Select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-white">Years of Experience</Label>
                     <Input type="number" value={formData.experience_years} onChange={e => setFormData({...formData, experience_years: e.target.value})}
                       placeholder="5"
-                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                       className="placeholder:text-white/30" />
                   </div>
                   <div>
                     <Label className="text-white">Hourly Rate ($)</Label>
                     <Input type="number" value={formData.hourly_rate} onChange={e => setFormData({...formData, hourly_rate: e.target.value})}
                       placeholder="50"
-                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                       className="placeholder:text-white/30" />
                   </div>
                 </div>
@@ -280,7 +280,7 @@ export default function ProviderSignup() {
                   <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}
                     placeholder="Describe your services, expertise, and what makes you unique..."
                     rows={3}
-                    style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                    style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                     className="placeholder:text-white/30" />
                 </div>
               </>
@@ -302,13 +302,13 @@ export default function ProviderSignup() {
                     <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>{desc}</p>
                     <label className="cursor-pointer block">
                       <div className="p-4 rounded-xl border-dashed border-2 flex items-center gap-3 transition-colors"
-                        style={{ borderColor: documents[key] ? '#10b981' : 'rgba(232,53,109,0.3)', background: documents[key] ? 'rgba(16,185,129,0.07)' : 'rgba(255,255,255,0.03)' }}>
+                        style={{ borderColor: documents[key] ? '#10b981' : 'rgba(249,115,22,0.3)', background: documents[key] ? 'rgba(16,185,129,0.07)' : 'rgba(255,255,255,0.03)' }}>
                         {uploadingDoc === key ? (
-                          <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#e8356d' }} />
+                          <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#f97316' }} />
                         ) : documents[key] ? (
                           <CheckCircle className="w-6 h-6 text-green-400" />
                         ) : (
-                          <Upload className="w-6 h-6" style={{ color: '#e8356d' }} />
+                          <Upload className="w-6 h-6" style={{ color: '#f97316' }} />
                         )}
                         <div>
                           <p className="text-sm font-medium" style={{ color: documents[key] ? '#10b981' : 'rgba(255,255,255,0.7)' }}>
@@ -332,12 +332,12 @@ export default function ProviderSignup() {
                     ))}
                     <label className="cursor-pointer">
                       <div className="h-20 rounded-lg border-dashed border-2 flex flex-col items-center justify-center"
-                        style={{ borderColor: 'rgba(232,53,109,0.3)', background: 'rgba(255,255,255,0.03)' }}>
+                        style={{ borderColor: 'rgba(249,115,22,0.3)', background: 'rgba(255,255,255,0.03)' }}>
                         {uploadingDoc === 'portfolio' ? (
-                          <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#e8356d' }} />
+                          <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#f97316' }} />
                         ) : (
                           <>
-                            <Camera className="w-5 h-5" style={{ color: '#e8356d' }} />
+                            <Camera className="w-5 h-5" style={{ color: '#f97316' }} />
                             <span className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Add Photo</span>
                           </>
                         )}
@@ -356,11 +356,11 @@ export default function ProviderSignup() {
                 <div>
                   <Label className="text-white">Service Location *</Label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#e8356d' }} />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#f97316' }} />
                     <Input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})}
                       placeholder="City, State / Area"
                       className="pl-10 placeholder:text-white/30"
-                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }} />
+                      style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }} />
                   </div>
                   <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Enter your primary service area</p>
                 </div>
@@ -372,9 +372,9 @@ export default function ProviderSignup() {
                       <button key={day} type="button" onClick={() => toggleDay(day)}
                         className="p-2 rounded-xl text-sm font-medium transition-all border"
                         style={{
-                          background: selectedDays.includes(day) ? '#e8356d' : 'rgba(255,255,255,0.06)',
+                          background: selectedDays.includes(day) ? '#f97316' : 'rgba(255,255,255,0.06)',
                           color: selectedDays.includes(day) ? '#fff' : 'rgba(255,255,255,0.6)',
-                          borderColor: selectedDays.includes(day) ? '#e8356d' : 'rgba(255,255,255,0.1)'
+                          borderColor: selectedDays.includes(day) ? '#f97316' : 'rgba(255,255,255,0.1)'
                         }}>
                         {day.slice(0, 3)}
                       </button>
@@ -382,7 +382,7 @@ export default function ProviderSignup() {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl" style={{ background: 'rgba(232,53,109,0.07)', border: '1px solid rgba(232,53,109,0.15)' }}>
+                <div className="p-4 rounded-xl" style={{ background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.15)' }}>
                   <h4 className="text-white font-medium mb-2">What happens next?</h4>
                   <ul className="space-y-1 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
                     <li>✓ Your profile is submitted for admin review</li>
@@ -402,12 +402,12 @@ export default function ProviderSignup() {
                 </Button>
               )}
               {step < 3 ? (
-                <Button className="flex-1 text-white" style={{ background: '#e8356d' }}
+                <Button className="flex-1 text-white" style={{ background: '#f97316' }}
                   onClick={() => { if (validateStep()) setStep(s => s + 1); }}>
                   Next <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
-                <Button className="flex-1 text-white" style={{ background: '#e8356d' }}
+                <Button className="flex-1 text-white" style={{ background: '#f97316' }}
                   disabled={loading} onClick={onSubmit}>
                   {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Submitting...</> : 'Submit Registration'}
                 </Button>

@@ -90,7 +90,7 @@ export default function Orders() {
   };
 
   const OrderCard = ({ order }) => (
-    <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }} className="hover:border-pink-400/50 transition-colors">
+    <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }} className="hover:border-pink-400/50 transition-colors">
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
@@ -102,23 +102,23 @@ export default function Orders() {
 
         <div className="space-y-1.5 mb-4 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" style={{ color: '#e8356d' }} />
+            <Clock className="w-4 h-4" style={{ color: '#f97316' }} />
             {order.scheduled_date} at {order.scheduled_time}
           </div>
           {order.address && (
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" style={{ color: '#e8356d' }} />
+              <MapPin className="w-4 h-4" style={{ color: '#f97316' }} />
               {order.address}
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-white/10">
+        <div className="flex flex-wrap items-center justify-between pt-3 border-t border-white/10 gap-2">
           <div>
             <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Total</p>
             <p className="text-white font-bold">${order.total_amount?.toFixed(2)}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* Rebook for completed/cancelled */}
             {['completed', 'cancelled'].includes(order.status) && (
               <Button size="sm" variant="ghost" className="text-blue-400 hover:bg-blue-400/10"
@@ -147,9 +147,9 @@ export default function Orders() {
   );
 
   return (
-    <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+    <div style={{ background: '#0f0900' }} className="min-h-screen py-6 sm:py-10">
       <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-white mb-8">My Orders</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8">My Orders</h1>
 
         {isLoading ? (
           <div className="space-y-4">
@@ -157,7 +157,7 @@ export default function Orders() {
           </div>
         ) : (
           <Tabs defaultValue="upcoming" className="w-full">
-            <TabsList style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(232,53,109,0.2)' }} className="grid w-full grid-cols-2 border">
+            <TabsList style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)' }} className="grid w-full grid-cols-2 border">
               <TabsTrigger value="upcoming" className="text-white data-[state=active]:bg-pink-500/20">
                 Upcoming ({upcomingOrders.length})
               </TabsTrigger>
@@ -173,7 +173,7 @@ export default function Orders() {
                 <div className="text-center py-12">
                   <p style={{ color: 'rgba(255,255,255,0.6)' }}>No upcoming bookings</p>
                   <Link to={createPageUrl('Browse')}>
-                    <Button size="sm" style={{ background: '#e8356d' }} className="mt-4 text-white">Browse Services</Button>
+                    <Button size="sm" style={{ background: '#f97316' }} className="mt-4 text-white">Browse Services</Button>
                   </Link>
                 </div>
               )}
@@ -194,7 +194,7 @@ export default function Orders() {
 
       {/* Cancel Confirmation Dialog */}
       <Dialog open={!!cancelOrderId} onOpenChange={() => setCancelOrderId(null)}>
-        <DialogContent style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.3)' }}>
+        <DialogContent style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)' }}>
           <DialogHeader>
             <DialogTitle className="text-white">Cancel Booking?</DialogTitle>
           </DialogHeader>

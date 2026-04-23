@@ -83,7 +83,7 @@ export default function SubscriptionManagement() {
 
   if (!user) {
     return (
-      <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+      <div style={{ background: '#0f0900' }} className="min-h-screen py-10">
         <div className="max-w-6xl mx-auto px-4">
           <Skeleton className="h-96" />
         </div>
@@ -92,17 +92,17 @@ export default function SubscriptionManagement() {
   }
 
   return (
-    <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+    <div style={{ background: '#0f0900' }} className="min-h-screen py-6 sm:py-10">
       <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-white mb-2">Subscription Plans</h1>
-        <p style={{ color: 'rgba(255,255,255,0.6)' }} className="mb-8">Choose the perfect plan for your business</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Subscription Plans</h1>
+        <p style={{ color: 'rgba(255,255,255,0.6)' }} className="mb-6 sm:mb-8">Choose the perfect plan for your business</p>
 
         {/* Current Subscription */}
         {currentSubscription && currentPlan && (
-          <Card style={{ background: 'rgba(232,53,109,0.1)', border: '2px solid #e8356d' }} className="mb-8">
+          <Card style={{ background: 'rgba(249,115,22,0.1)', border: '2px solid #f97316' }} className="mb-8">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3 mb-2">
-                <CreditCard className="w-5 h-5" style={{ color: '#e8356d' }} />
+                <CreditCard className="w-5 h-5" style={{ color: '#f97316' }} />
                 <h3 className="text-lg font-semibold text-white">Current Plan: {currentPlan.name}</h3>
               </div>
               <p style={{ color: 'rgba(255,255,255,0.6)' }} className="text-sm">
@@ -117,13 +117,13 @@ export default function SubscriptionManagement() {
 
         {/* Plans Grid */}
         {plansLoading ? (
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[1, 2, 3].map(i => (
               <Skeleton key={i} className="h-96" />
             ))}
           </div>
         ) : (
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {plans.map(plan => (
               <PlanCard
                 key={plan.id}
@@ -138,7 +138,7 @@ export default function SubscriptionManagement() {
         {/* Confirmation Dialog */}
         {selectedPlan && (
           <Dialog open={!!selectedPlan} onOpenChange={() => setSelectedPlan(null)}>
-            <DialogContent style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.3)' }}>
+            <DialogContent style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)' }}>
               <DialogHeader>
                 <DialogTitle className="text-white">Upgrade to {selectedPlan.name}</DialogTitle>
               </DialogHeader>
@@ -176,7 +176,7 @@ export default function SubscriptionManagement() {
                   </Button>
                   <Button
                     className="flex-1 text-white"
-                    style={{ background: '#e8356d' }}
+                    style={{ background: '#f97316' }}
                     onClick={() => selectPlanMutation.mutate(selectedPlan.id)}
                     disabled={selectPlanMutation.isPending}
                   >

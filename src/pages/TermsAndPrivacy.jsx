@@ -4,25 +4,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function TermsAndPrivacy() {
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
-      <div className="max-w-4xl mx-auto px-6">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Terms, Privacy & Legal</h1>
+    <div className="min-h-screen bg-slate-50 py-8 sm:py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-8 sm:mb-10">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Terms, Privacy & Legal</h1>
           <p className="text-slate-500">Kindness Community Foundation – Marketplace Platform</p>
         </div>
 
         <Tabs defaultValue="terms">
           <TabsList className="w-full mb-8">
-            <TabsTrigger value="terms" className="flex-1 flex items-center gap-2">
-              <FileText className="w-4 h-4" /> Terms & Conditions
+            <TabsTrigger value="terms" className="flex-1 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <FileText className="w-4 h-4 shrink-0" /> <span className="hidden xs:inline sm:inline">Terms &amp; Conditions</span><span className="xs:hidden sm:hidden">Terms</span>
             </TabsTrigger>
-            <TabsTrigger value="privacy" className="flex-1 flex items-center gap-2">
-              <Shield className="w-4 h-4" /> Privacy Policy
+            <TabsTrigger value="privacy" className="flex-1 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Shield className="w-4 h-4 shrink-0" /> <span className="hidden xs:inline sm:inline">Privacy Policy</span><span className="xs:hidden sm:hidden">Privacy</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="terms">
-            <div className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm prose prose-slate max-w-none">
+            <div className="bg-white rounded-2xl p-4 sm:p-8 border border-slate-100 shadow-sm prose prose-slate max-w-none">
               <h2>Terms & Conditions</h2>
               <p className="text-slate-500 text-sm">Last updated: {new Date().toLocaleDateString()}</p>
 
@@ -53,7 +53,7 @@ export default function TermsAndPrivacy() {
           </TabsContent>
 
           <TabsContent value="privacy">
-            <div className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm prose prose-slate max-w-none">
+            <div className="bg-white rounded-2xl p-4 sm:p-8 border border-slate-100 shadow-sm prose prose-slate max-w-none">
               <h2>Privacy Policy</h2>
               <p className="text-slate-500 text-sm">Last updated: {new Date().toLocaleDateString()}</p>
 

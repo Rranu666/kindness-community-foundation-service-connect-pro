@@ -2,12 +2,12 @@ import React from 'react';
 import { Star } from 'lucide-react';
 import { format } from 'date-fns';
 
-const PINK = '#e8356d';
+const PINK = '#f97316';
 
 export default function ReviewCard({ review, dark = false }) {
   if (dark) {
     return (
-      <div className="rounded-xl p-5" style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.12)' }}>
+      <div className="rounded-xl p-5" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.12)' }}>
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-bold text-white text-sm" style={{ background: PINK }}>
             {review.customer_name?.charAt(0)?.toUpperCase() || 'A'}
@@ -16,7 +16,7 @@ export default function ReviewCard({ review, dark = false }) {
             <div className="flex items-center justify-between mb-2">
               <span className="font-medium text-white text-sm">{review.customer_name || 'Anonymous'}</span>
               <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                {review.created_date && format(new Date(review.created_date), 'MMM d, yyyy')}
+                {(review.created_at || review.created_date) ? format(new Date(review.created_at || review.created_date), 'MMM d, yyyy') : ''}
               </span>
             </div>
             <div className="flex items-center gap-0.5 mb-2">
@@ -36,7 +36,7 @@ export default function ReviewCard({ review, dark = false }) {
   return (
     <div className="bg-white rounded-xl p-5 border border-slate-100">
       <div className="flex items-start gap-4">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shrink-0">
           <span className="text-sm font-bold text-white">
             {review.customer_name?.charAt(0)?.toUpperCase() || 'A'}
           </span>
@@ -45,7 +45,7 @@ export default function ReviewCard({ review, dark = false }) {
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-medium text-slate-800">{review.customer_name || 'Anonymous'}</h4>
             <span className="text-xs text-slate-400">
-              {review.created_date && format(new Date(review.created_date), 'MMM d, yyyy')}
+              {(review.created_at || review.created_date) ? format(new Date(review.created_at || review.created_date), 'MMM d, yyyy') : ''}
             </span>
           </div>
           <div className="flex items-center gap-1 mb-2">

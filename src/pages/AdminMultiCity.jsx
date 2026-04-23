@@ -81,11 +81,11 @@ export default function AdminMultiCity() {
   };
 
   return (
-    <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+    <div style={{ background: '#0f0900' }} className="min-h-screen py-6 sm:py-10">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Multi-City Configuration</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Multi-City Configuration</h1>
             <p style={{ color: 'rgba(255,255,255,0.6)' }}>Manage tax rates and locations</p>
           </div>
           <Dialog open={openDialog} onOpenChange={(open) => {
@@ -96,12 +96,12 @@ export default function AdminMultiCity() {
             }
           }}>
             <DialogTrigger asChild>
-              <Button style={{ background: '#e8356d' }} className="text-white hover:opacity-90">
+              <Button style={{ background: '#f97316' }} className="text-white hover:opacity-90">
                 <Plus className="w-4 h-4 mr-2" />
                 Add City
               </Button>
             </DialogTrigger>
-            <DialogContent style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.3)' }}>
+            <DialogContent style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)' }}>
               <DialogHeader>
                 <DialogTitle className="text-white">
                   {editingCity ? 'Edit City' : 'Add New City'}
@@ -114,7 +114,7 @@ export default function AdminMultiCity() {
                     placeholder="e.g., New York"
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                    style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                   />
                 </div>
                 <div>
@@ -123,7 +123,7 @@ export default function AdminMultiCity() {
                     placeholder="e.g., NY"
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                    style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                   />
                 </div>
                 <div>
@@ -132,7 +132,7 @@ export default function AdminMultiCity() {
                     placeholder="e.g., USA"
                     value={formData.country}
                     onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                    style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                   />
                 </div>
                 <div>
@@ -145,12 +145,12 @@ export default function AdminMultiCity() {
                     step="0.1"
                     min="0"
                     max="100"
-                    style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                    style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                   />
                 </div>
                 <Button
                   className="w-full text-white"
-                  style={{ background: '#e8356d' }}
+                  style={{ background: '#f97316' }}
                   onClick={handleSubmit}
                   disabled={createMutation.isPending || updateMutation.isPending}
                 >
@@ -171,7 +171,7 @@ export default function AdminMultiCity() {
         ) : taxConfigs.length > 0 ? (
           <div className="grid md:grid-cols-2 gap-4">
             {taxConfigs.map(config => (
-              <Card key={config.id} style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+              <Card key={config.id} style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -199,9 +199,9 @@ export default function AdminMultiCity() {
                       </Button>
                     </div>
                   </div>
-                  <div className="p-3 rounded-lg" style={{ background: 'rgba(232,53,109,0.1)' }}>
+                  <div className="p-3 rounded-lg" style={{ background: 'rgba(249,115,22,0.1)' }}>
                     <p style={{ color: 'rgba(255,255,255,0.6)' }} className="text-sm">Tax Rate</p>
-                    <p className="text-2xl font-bold" style={{ color: '#e8356d' }}>
+                    <p className="text-2xl font-bold" style={{ color: '#f97316' }}>
                       {config.tax_rate}%
                     </p>
                   </div>
@@ -210,7 +210,7 @@ export default function AdminMultiCity() {
             ))}
           </div>
         ) : (
-          <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+          <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
             <CardContent className="py-12 text-center">
               <p style={{ color: 'rgba(255,255,255,0.6)' }}>No cities configured yet</p>
             </CardContent>

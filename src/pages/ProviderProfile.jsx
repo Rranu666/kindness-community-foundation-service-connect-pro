@@ -17,40 +17,62 @@ import BookingModal from '@/components/booking/BookingModal';
 import { toast } from 'sonner';
 import { MessageCircle } from 'lucide-react';
 
-const PINK = '#e8356d';
+const PINK = '#f97316';
 
 export default function ProviderProfile() {
   const urlParams = new URLSearchParams(window.location.search);
   const providerId = urlParams.get('id');
+  const slug = urlParams.get('p');
+
+  // Update browser URL to show clean slug without reload
+  React.useEffect(() => {
+    if (slug && providerId) {
+      const clean = `${window.location.pathname}?p=${slug}`;
+      window.history.replaceState(null, '', clean);
+    }
+  }, [slug, providerId]);
 
   const [bookingService, setBookingService] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
 
+  const slugify = (name) =>
+    name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '';
+
   const { data: provider, isLoading } = useQuery({
-    queryKey: ['provider', providerId],
+    queryKey: ['provider', providerId, slug],
     queryFn: async () => {
-      const results = await base44.entities.ServiceProvider.filter({ id: providerId });
-      return results[0];
+      // Try by ID first, then fall back to slug match
+      if (providerId) {
+        const results = await base44.entities.ServiceProvider.filter({ id: providerId });
+        if (results[0]) return results[0];
+      }
+      if (slug) {
+        const all = await base44.entities.ServiceProvider.list();
+        return all.find(p => slugify(p.business_name) === slug) || null;
+      }
+      return null;
     },
-    enabled: !!providerId
+    enabled: !!(providerId || slug)
   });
 
+  const resolvedId = provider?.id;
+
   const { data: services = [] } = useQuery({
-    queryKey: ['services', providerId],
-    queryFn: () => base44.entities.Service.filter({ provider_id: providerId, is_active: true }),
-    enabled: !!providerId
+    queryKey: ['services', resolvedId],
+    queryFn: () => base44.entities.Service.filter({ provider_id: resolvedId, is_active: true }),
+    enabled: !!resolvedId
   });
 
   const { data: reviews = [] } = useQuery({
-    queryKey: ['reviews', providerId],
-    queryFn: () => base44.entities.Review.filter({ provider_id: providerId }, '-created_date'),
-    enabled: !!providerId
+    queryKey: ['reviews', resolvedId],
+    queryFn: () => base44.entities.Review.filter({ provider_id: resolvedId }, '-created_at'),
+    enabled: !!resolvedId
   });
 
   const { data: category } = useQuery({
     queryKey: ['category', provider?.category_id],
     queryFn: async () => {
-      const cats = await base44.entities.ServiceCategory.filter({ id: provider.category_id });
+      const cats = await base44.entities.ServiceCategory.filter({ id: provider?.category_id });
       return cats[0];
     },
     enabled: !!provider?.category_id
@@ -67,10 +89,10 @@ export default function ProviderProfile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen" style={{ background: '#0d0d1f' }}>
+      <div className="min-h-screen" style={{ background: '#0f0900' }}>
         <Skeleton className="h-64 w-full opacity-30" />
         <div className="max-w-5xl mx-auto px-6 -mt-16">
-          <div className="rounded-2xl p-8" style={{ background: '#13132a' }}>
+          <div className="rounded-2xl p-8" style={{ background: '#140b00' }}>
             <Skeleton className="w-32 h-32 rounded-2xl mb-4 opacity-30" />
             <Skeleton className="h-8 w-64 mb-2 opacity-20" />
             <Skeleton className="h-4 w-48 opacity-20" />
@@ -82,7 +104,7 @@ export default function ProviderProfile() {
 
   if (!provider) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0d0d1f' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0900' }}>
         <div className="text-center">
           <h2 className="text-xl font-semibold text-white mb-2">Provider not found</h2>
           <Link to={createPageUrl('Browse')}>
@@ -94,15 +116,15 @@ export default function ProviderProfile() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0d0d1f' }}>
+    <div className="min-h-screen" style={{ background: '#0f0900' }}>
       {/* Cover */}
       <div className="relative h-56 md:h-72">
         {provider.cover_image ? (
           <img src={provider.cover_image} alt="" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #0d0d1f 100%)' }} />
+          <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #1a0c00 0%, #0f0900 100%)' }} />
         )}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(13,13,31,0.85) 0%, transparent 60%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(15,9,0,0.85) 0%, transparent 60%)' }} />
         <Link to={createPageUrl('Browse')} className="absolute top-5 left-5">
           <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -116,14 +138,14 @@ export default function ProviderProfile() {
 
       {/* Profile Card */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-16 relative z-10 pb-16">
-        <div className="rounded-2xl shadow-xl overflow-hidden mb-6" style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+        <div className="rounded-2xl shadow-xl overflow-hidden mb-6" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
           <div className="p-6 md:p-8">
             <div className="flex flex-col md:flex-row gap-6">
               {/* Avatar */}
               <div className="shrink-0">
-                <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl border-2 overflow-hidden" style={{ borderColor: PINK, background: 'linear-gradient(135deg, #e8356d, #9333ea)' }}>
-                  {provider.profile_image ? (
-                    <img src={provider.profile_image} alt={provider.business_name} className="w-full h-full object-cover" />
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl border-2 overflow-hidden" style={{ borderColor: PINK, background: 'linear-gradient(135deg, #f97316, #ef4444)' }}>
+                  {(provider.avatar_url || provider.profile_image) ? (
+                    <img src={provider.avatar_url || provider.profile_image} alt={provider.business_name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <span className="text-3xl font-bold text-white">{provider.business_name?.charAt(0)}</span>
@@ -175,7 +197,7 @@ export default function ProviderProfile() {
                 </div>
 
                 {category && (
-                  <Badge variant="outline" style={{ borderColor: 'rgba(232,53,109,0.3)', color: PINK }}>
+                  <Badge variant="outline" style={{ borderColor: 'rgba(249,115,22,0.3)', color: PINK }}>
                     {category.name}
                   </Badge>
                 )}
@@ -196,10 +218,10 @@ export default function ProviderProfile() {
                       {provider.phone}
                     </a>
                   )}
-                  {provider.email && (
-                    <a href={`mailto:${provider.email}`} className="flex items-center gap-2 text-sm hover:opacity-80" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  {(provider.owner_email || provider.email) && (
+                    <a href={`mailto:${provider.owner_email || provider.email}`} className="flex items-center gap-2 text-sm hover:opacity-80" style={{ color: 'rgba(255,255,255,0.6)' }}>
                       <Mail className="w-4 h-4" />
-                      {provider.email}
+                      {provider.owner_email || provider.email}
                     </a>
                   )}
                 </div>
@@ -210,7 +232,7 @@ export default function ProviderProfile() {
 
         {/* Tabs */}
         <Tabs defaultValue="services">
-          <TabsList style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+          <TabsList style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }} className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-0.5 p-1">
             <TabsTrigger value="services" className="data-[state=active]:text-white data-[state=active]:bg-white/15 hover:bg-white/10 hover:text-white" style={{ color: 'rgba(255,255,255,0.5)' }}>
               Services ({services.length})
             </TabsTrigger>
@@ -237,7 +259,7 @@ export default function ProviderProfile() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl p-10 text-center" style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.1)' }}>
+              <div className="rounded-xl p-10 text-center" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.1)' }}>
                 <p style={{ color: 'rgba(255,255,255,0.4)' }}>No services listed yet</p>
               </div>
             )}
@@ -251,7 +273,7 @@ export default function ProviderProfile() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl p-10 text-center" style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.1)' }}>
+              <div className="rounded-xl p-10 text-center" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.1)' }}>
                 <p style={{ color: 'rgba(255,255,255,0.4)' }}>No reviews yet</p>
               </div>
             )}
@@ -271,7 +293,7 @@ export default function ProviderProfile() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-xl p-10 text-center" style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.1)' }}>
+                <div className="rounded-xl p-10 text-center" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.1)' }}>
                   <p style={{ color: 'rgba(255,255,255,0.4)' }}>No portfolio images yet</p>
                 </div>
               );
@@ -279,7 +301,7 @@ export default function ProviderProfile() {
           </TabsContent>
 
           <TabsContent value="about" className="mt-6">
-            <div className="rounded-2xl p-6" style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.15)' }}>
+            <div className="rounded-2xl p-6" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.15)' }}>
               <h3 className="font-semibold text-white mb-4">About {provider.business_name}</h3>
               <p className="mb-6" style={{ color: 'rgba(255,255,255,0.6)' }}>{provider.description || 'No description provided.'}</p>
 
@@ -297,7 +319,7 @@ export default function ProviderProfile() {
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {avail.map((day) => (
-                        <Badge key={day} variant="outline" style={{ borderColor: 'rgba(232,53,109,0.3)', color: 'rgba(255,255,255,0.7)' }}>{day}</Badge>
+                        <Badge key={day} variant="outline" style={{ borderColor: 'rgba(249,115,22,0.3)', color: 'rgba(255,255,255,0.7)' }}>{day}</Badge>
                       ))}
                     </div>
                   </div>

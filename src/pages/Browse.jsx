@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ProviderCard from '@/components/marketplace/ProviderCard';
 import SearchBar from '@/components/marketplace/SearchBar';
 
-const PINK = '#e8356d';
+const PINK = '#f97316';
 
 const FALLBACK_CATEGORIES = [
   { id: 'ai-automation', name: 'AI & Automation' },
@@ -40,7 +40,7 @@ export default function Browse() {
   const [instantBooking, setInstantBooking] = useState(false);
   const [sortBy, setSortBy] = useState('rating');
 
-  const { data: categories } = useQuery({
+  const { data: categories = FALLBACK_CATEGORIES } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
       try {
@@ -50,7 +50,6 @@ export default function Browse() {
         return FALLBACK_CATEGORIES;
       }
     },
-    initialData: FALLBACK_CATEGORIES,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -79,7 +78,12 @@ export default function Browse() {
     }
 
     if (selectedCategory && selectedCategory !== 'all') {
-      result = result.filter(p => p.category_id === selectedCategory);
+      // selectedCategory may be a DB UUID or a fallback slug — match both ways
+      const selectedCat = categories.find(c => c.id === selectedCategory);
+      result = result.filter(p =>
+        p.category_id === selectedCategory ||
+        (selectedCat && p.category_id === selectedCat.id)
+      );
     }
 
     if (verifiedOnly) result = result.filter(p => p.is_verified);
@@ -102,7 +106,7 @@ export default function Browse() {
     }
 
     return result;
-  }, [providers, searchQuery, locationFilter, selectedCategory, priceRange, minRating, verifiedOnly, featuredOnly, sortBy]);
+  }, [providers, categories, searchQuery, locationFilter, selectedCategory, priceRange, minRating, verifiedOnly, featuredOnly, sortBy]);
 
   const handleSearch = ({ query, location }) => {
     setSearchQuery(query);
@@ -135,7 +139,7 @@ export default function Browse() {
       <div>
         <h4 className="font-medium text-white mb-3 text-sm">Category</h4>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="text-white" style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(232,53,109,0.2)' }}>
+          <SelectTrigger className="text-white" style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(249,115,22,0.2)' }}>
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
@@ -160,19 +164,24 @@ export default function Browse() {
       {/* Min Rating */}
       <div>
         <h4 className="font-medium text-white mb-3 text-sm">Minimum Rating</h4>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-4 gap-1.5">
           {[0, 3, 4, 4.5].map(r => (
             <button
               key={r}
               onClick={() => setMinRating(r)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+              className="flex items-center justify-center gap-0.5 py-1.5 rounded-lg text-xs font-medium transition-colors w-full"
               style={{
                 background: minRating === r ? PINK : 'rgba(255,255,255,0.07)',
                 color: minRating === r ? '#fff' : 'rgba(255,255,255,0.6)',
                 border: `1px solid ${minRating === r ? PINK : 'rgba(255,255,255,0.1)'}`,
               }}
             >
-              {r === 0 ? 'Any' : <><Star className="w-3 h-3 fill-current" /> {r}+</>}
+              {r === 0 ? 'Any' : (
+                <span className="inline-flex items-center gap-0.5 leading-none">
+                  <span className="text-[11px] leading-none" style={{ color: minRating === r ? '#fff' : '#f59e0b' }}>★</span>
+                  <span>{r}+</span>
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -204,12 +213,12 @@ export default function Browse() {
   );
 
   return (
-    <div className="min-h-screen" style={{ background: '#0d0d1f' }}>
+    <div className="min-h-screen" style={{ background: '#0f0900' }}>
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #0d0d1f 100%)', borderBottom: '1px solid rgba(232,53,109,0.2)' }} className="py-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Find Service Providers</h1>
-          <p className="mb-6 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+      <div style={{ background: 'linear-gradient(135deg, #1a0c00 0%, #0f0900 100%)', borderBottom: '1px solid rgba(249,115,22,0.2)' }} className="py-8 sm:py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Find Service Providers</h1>
+          <p className="mb-4 sm:mb-6 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
             Browse categories, filter by location, rating, and more
           </p>
           <SearchBar onSearch={handleSearch} initialQuery={searchQuery} initialLocation={locationFilter} dark />
@@ -218,7 +227,7 @@ export default function Browse() {
 
       {/* Category quick-filter chips */}
       {categories.length > 0 && (
-        <div className="border-b" style={{ borderColor: 'rgba(232,53,109,0.1)', background: '#13132a' }}>
+        <div className="border-b" style={{ borderColor: 'rgba(249,115,22,0.1)', background: '#140b00' }}>
           <div className="max-w-7xl mx-auto px-6 py-3 flex gap-2 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setSelectedCategory('all')}
@@ -249,7 +258,7 @@ export default function Browse() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div className="flex items-center gap-3">
@@ -257,7 +266,7 @@ export default function Browse() {
               {filteredProviders.length} provider{filteredProviders.length !== 1 ? 's' : ''} found
             </span>
             {activeFiltersCount > 0 && (
-              <Badge style={{ background: 'rgba(232,53,109,0.2)', color: PINK, border: `1px solid rgba(232,53,109,0.3)` }}>
+              <Badge style={{ background: 'rgba(249,115,22,0.2)', color: PINK, border: `1px solid rgba(249,115,22,0.3)` }}>
                 {activeFiltersCount} filter{activeFiltersCount !== 1 ? 's' : ''} active
               </Badge>
             )}
@@ -267,7 +276,7 @@ export default function Browse() {
             {/* Mobile Filter */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="lg:hidden flex-1 sm:flex-none text-white hover:bg-white/10 hover:text-white" style={{ background: '#13132a', borderColor: 'rgba(232,53,109,0.2)' }}>
+                <Button variant="outline" className="lg:hidden flex-1 sm:flex-none text-white hover:bg-white/10 hover:text-white" style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }}>
                   <SlidersHorizontal className="w-4 h-4 mr-2" />
                   Filters
                   {activeFiltersCount > 0 && (
@@ -275,7 +284,7 @@ export default function Browse() {
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)' }}>
+              <SheetContent side="left" style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)' }}>
                 <SheetHeader>
                   <SheetTitle className="text-white">Filters</SheetTitle>
                 </SheetHeader>
@@ -284,7 +293,7 @@ export default function Browse() {
             </Sheet>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-48 text-white" style={{ background: '#13132a', borderColor: 'rgba(232,53,109,0.2)' }}>
+              <SelectTrigger className="w-full sm:w-48 text-white" style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }}>
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -301,7 +310,7 @@ export default function Browse() {
         <div className="flex gap-8">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-64 shrink-0">
-            <div style={{ background: '#13132a', borderColor: 'rgba(232,53,109,0.2)' }} className="rounded-2xl p-6 border sticky top-24">
+            <div style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="rounded-2xl p-6 border sticky top-24">
               <div className="flex items-center gap-2 mb-6">
                 <Filter className="w-5 h-5" style={{ color: PINK }} />
                 <h3 className="font-semibold text-white">Filters</h3>
@@ -315,7 +324,7 @@ export default function Browse() {
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {Array(6).fill(0).map((_, i) => (
-                  <div key={i} style={{ background: '#13132a', borderColor: 'rgba(232,53,109,0.2)' }} className="rounded-2xl border">
+                  <div key={i} style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="rounded-2xl border">
                     <Skeleton className="h-40 rounded-t-2xl opacity-30" />
                     <div className="p-6 pt-12">
                       <Skeleton className="h-5 w-32 mb-2 opacity-20" />
@@ -333,7 +342,7 @@ export default function Browse() {
               </div>
             ) : (
               <div className="text-center py-20">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(232,53,109,0.1)' }}>
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(249,115,22,0.1)' }}>
                   <Filter className="w-10 h-10" style={{ color: PINK }} />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">No providers found</h3>

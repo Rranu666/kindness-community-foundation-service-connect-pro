@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const STATUS_TIMELINE = {
-  pending: { label: 'Booking Confirmed', step: 0, color: '#e8356d' },
-  confirmed: { label: 'Provider Assigned', step: 1, color: '#e8356d' },
+  pending: { label: 'Booking Confirmed', step: 0, color: '#f97316' },
+  confirmed: { label: 'Provider Assigned', step: 1, color: '#f97316' },
   in_progress: { label: 'On the Way', step: 2, color: '#3b82f6' },
   completed: { label: 'Service Completed', step: 3, color: '#10b981' },
   cancelled: { label: 'Cancelled', step: -1, color: '#ef4444' }
@@ -39,10 +39,10 @@ export default function OrderTracking() {
 
   if (isLoading) {
     return (
-      <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+      <div style={{ background: '#0f0900' }} className="min-h-screen py-10">
         <div className="max-w-4xl mx-auto px-4">
           <Skeleton className="h-8 w-40 mb-8" />
-          <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+          <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
             <CardContent className="pt-6">
               <Skeleton className="h-96" />
             </CardContent>
@@ -54,7 +54,7 @@ export default function OrderTracking() {
 
   if (!order) {
     return (
-      <div style={{ background: '#0d0d1f' }} className="min-h-screen flex items-center justify-center">
+      <div style={{ background: '#0f0900' }} className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-2">Order not found</h2>
           <p style={{ color: 'rgba(255,255,255,0.6)' }}>The order you're looking for doesn't exist.</p>
@@ -66,15 +66,15 @@ export default function OrderTracking() {
   const statusInfo = STATUS_TIMELINE[order.status];
 
   return (
-    <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+    <div style={{ background: '#0f0900' }} className="min-h-screen py-6 sm:py-10">
       <div className="max-w-4xl mx-auto px-4 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-1">Order #{order.order_number}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Order #{order.order_number}</h1>
           <p style={{ color: 'rgba(255,255,255,0.6)' }}>{order.service_name}</p>
         </div>
 
         {/* Status Timeline */}
-        <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+        <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
           <CardHeader>
             <CardTitle className="text-white">Service Status</CardTitle>
           </CardHeader>
@@ -107,7 +107,7 @@ export default function OrderTracking() {
         </Card>
 
         {/* Service Details */}
-        <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+        <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
           <CardHeader>
             <CardTitle className="text-white">Service Details</CardTitle>
           </CardHeader>
@@ -120,7 +120,7 @@ export default function OrderTracking() {
               <div>
                 <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>Service Address</p>
                 <p className="text-white font-semibold flex items-start gap-2">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#e8356d' }} />
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#f97316' }} />
                   {order.address}
                 </p>
               </div>
@@ -130,12 +130,12 @@ export default function OrderTracking() {
 
         {/* Provider Info */}
         {provider && (
-          <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+          <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
             <CardHeader>
               <CardTitle className="text-white">Service Provider</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div>
                   <p className="text-white font-semibold text-lg">{provider.business_name}</p>
                   <p style={{ color: 'rgba(255,255,255,0.6)' }} className="flex items-center gap-2 mt-2">
@@ -145,7 +145,7 @@ export default function OrderTracking() {
                 </div>
                 <Button
                   size="sm"
-                  style={{ background: '#e8356d' }}
+                  style={{ background: '#f97316' }}
                   className="text-white hover:opacity-90"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
@@ -157,7 +157,7 @@ export default function OrderTracking() {
         )}
 
         {/* Payment Summary */}
-        <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+        <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
           <CardHeader>
             <CardTitle className="text-white">Payment Summary</CardTitle>
           </CardHeader>

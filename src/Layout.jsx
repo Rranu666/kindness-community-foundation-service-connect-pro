@@ -44,19 +44,19 @@ export default function Layout({ children, currentPageName }) {
 
   const currentLang = LANGUAGES.find(l => l.code === selectedLang);
 
-  const hideLayout = ['Home', 'Login'].includes(currentPageName);
+  const hideLayout = ['Home', 'Login', 'AdminDashboard'].includes(currentPageName);
 
   if (hideLayout) {
     return (
       <>
         <style>{`
           :root {
-            --kcf-dark: #0d0d1f;
-            --kcf-darker: #080812;
-            --kcf-pink: #e8356d;
-            --kcf-pink-light: #ff4d84;
-            --kcf-card: #13132a;
-            --kcf-border: rgba(232,53,109,0.2);
+            --kcf-dark: #0f0900;
+            --kcf-darker: #080500;
+            --kcf-pink: #f97316;
+            --kcf-pink-light: #fb923c;
+            --kcf-card: #140b00;
+            --kcf-border: rgba(249,115,22,0.2);
           }
         `}</style>
         {children}
@@ -66,20 +66,20 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0d0d1f', color: '#fff' }}>
+    <div className="min-h-screen" style={{ background: '#0f0900', color: '#fff' }}>
       <style>{`
         :root {
-          --kcf-dark: #0d0d1f;
-          --kcf-darker: #080812;
-          --kcf-pink: #e8356d;
-          --kcf-pink-light: #ff4d84;
-          --kcf-card: #13132a;
-          --kcf-border: rgba(232,53,109,0.2);
+          --kcf-dark: #0f0900;
+          --kcf-darker: #080500;
+          --kcf-pink: #f97316;
+          --kcf-pink-light: #fb923c;
+          --kcf-card: #140b00;
+          --kcf-border: rgba(249,115,22,0.2);
         }
       `}</style>
 
       {/* Navigation */}
-      <nav style={{ background: 'rgba(13,13,31,0.95)', borderBottom: '1px solid rgba(232,53,109,0.2)' }} className="sticky top-0 z-50 backdrop-blur-md">
+      <nav style={{ background: 'rgba(15,9,0,0.95)', borderBottom: '1px solid rgba(249,115,22,0.2)' }} className="sticky top-0 z-50 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -91,8 +91,8 @@ export default function Layout({ children, currentPageName }) {
             <div className="hidden md:flex items-center gap-6">
               {[
                 { label: 'Home', page: 'Home' },
-                { label: 'Browse AI Services', page: 'Browse' },
-                { label: 'Voice Request', page: 'VoiceRequest' },
+                { label: 'Find Services', page: 'Browse' },
+                { label: '🎤 Voice Request', page: 'VoiceRequest' },
                 { label: 'List Your Services', page: 'ProviderSignup' },
                 { label: 'Support', page: 'Support' },
               ].map(({ label, page }) => (
@@ -100,9 +100,9 @@ export default function Layout({ children, currentPageName }) {
                   key={page}
                   to={createPageUrl(page)}
                   className="text-sm font-medium transition-colors"
-                  style={{ color: currentPageName === page ? '#e8356d' : 'rgba(255,255,255,0.7)' }}
-                  onMouseEnter={e => e.target.style.color = '#e8356d'}
-                  onMouseLeave={e => e.target.style.color = currentPageName === page ? '#e8356d' : 'rgba(255,255,255,0.7)'}
+                  style={{ color: currentPageName === page ? '#f97316' : 'rgba(255,255,255,0.7)' }}
+                  onMouseEnter={e => e.target.style.color = '#f97316'}
+                  onMouseLeave={e => e.target.style.color = currentPageName === page ? '#f97316' : 'rgba(255,255,255,0.7)'}
                 >
                   {label}
                 </Link>
@@ -125,14 +125,14 @@ export default function Layout({ children, currentPageName }) {
                   <span>{currentLang?.label}</span>
                 </button>
                 {langMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 rounded-xl overflow-hidden shadow-xl z-50" style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.25)' }}>
+                  <div className="absolute right-0 mt-2 w-40 rounded-xl overflow-hidden shadow-xl z-50" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.25)' }}>
                     {LANGUAGES.map(lang => (
                       <button
                         key={lang.code}
                         className="w-full text-left px-4 py-2.5 text-sm"
                         style={{
-                          color: lang.code === selectedLang ? '#e8356d' : 'rgba(255,255,255,0.75)',
-                          background: lang.code === selectedLang ? 'rgba(232,53,109,0.1)' : 'transparent',
+                          color: lang.code === selectedLang ? '#f97316' : 'rgba(255,255,255,0.75)',
+                          background: lang.code === selectedLang ? 'rgba(249,115,22,0.1)' : 'transparent',
                           fontWeight: lang.code === selectedLang ? 600 : 400,
                         }}
                         onClick={() => handleLangChange(lang.code)}
@@ -149,7 +149,7 @@ export default function Layout({ children, currentPageName }) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10">
                       <Avatar className="w-8 h-8">
-                        <AvatarFallback style={{ background: '#e8356d', color: '#fff' }}>
+                        <AvatarFallback style={{ background: '#f97316', color: '#fff' }}>
                           {user.full_name?.charAt(0) || user.email?.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
@@ -158,7 +158,7 @@ export default function Layout({ children, currentPageName }) {
                       </span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 [&_[role=menuitem]]:focus:bg-white/10 [&_[role=menuitem]]:hover:bg-white/10" style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.3)', color: '#fff' }}>
+                  <DropdownMenuContent align="end" className="w-48 [&_[role=menuitem]]:focus:bg-white/10 [&_[role=menuitem]]:hover:bg-white/10" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)', color: '#fff' }}>
                     <DropdownMenuItem asChild>
                       <Link to={createPageUrl('CustomerProfile')} className="flex items-center text-white hover:text-white">
                         <LayoutDashboard className="w-4 h-4 mr-2" />
@@ -177,7 +177,7 @@ export default function Layout({ children, currentPageName }) {
                         Wallet
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator style={{ background: 'rgba(232,53,109,0.2)' }} />
+                    <DropdownMenuSeparator style={{ background: 'rgba(249,115,22,0.2)' }} />
                     <DropdownMenuItem asChild>
                       <Link to={createPageUrl('ProviderDashboard')} className="flex items-center text-white hover:text-white">
                         <Building2 className="w-4 h-4 mr-2" />
@@ -212,7 +212,7 @@ export default function Layout({ children, currentPageName }) {
                         </DropdownMenuItem>
                       </>
                     )}
-                    <DropdownMenuSeparator style={{ background: 'rgba(232,53,109,0.2)' }} />
+                    <DropdownMenuSeparator style={{ background: 'rgba(249,115,22,0.2)' }} />
                     <DropdownMenuItem onClick={() => logout()} className="text-white hover:text-white cursor-pointer">
                       <LogOut className="w-4 h-4 mr-2" />
                       Logout
@@ -222,7 +222,7 @@ export default function Layout({ children, currentPageName }) {
               ) : (
                 <Button
                   onClick={() => navigate('/Login')}
-                  style={{ background: '#e8356d', border: 'none' }}
+                  style={{ background: '#f97316', border: 'none' }}
                   className="hover:opacity-90 text-white"
                 >
                   Sign In
@@ -244,25 +244,40 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div style={{ background: '#13132a', borderTop: '1px solid rgba(232,53,109,0.2)' }} className="md:hidden pb-4">
+          <div style={{ background: '#140b00', borderTop: '1px solid rgba(249,115,22,0.2)' }} className="md:hidden pb-4">
             <div className="px-4 pt-2 space-y-1">
               {[
                 { label: 'Home', page: 'Home', icon: Home },
-                { label: 'Browse Services', page: 'Browse', icon: Search },
-                { label: 'Become a Provider', page: 'ProviderSignup', icon: Building2 },
+                { label: 'Find Services', page: 'Browse', icon: Search },
+                { label: '🎤 Voice Request', page: 'VoiceRequest', icon: null },
+                { label: 'List Your Services', page: 'ProviderSignup', icon: Building2 },
                 { label: 'Support', page: 'Support', icon: HelpCircle },
               ].map(({ label, page, icon: Icon }) => (
                 <Link
                   key={page}
                   to={createPageUrl(page)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors"
-                  style={{ color: 'rgba(255,255,255,0.8)' }}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium"
+                  style={{
+                    color: currentPageName === page ? '#f97316' : 'rgba(255,255,255,0.8)',
+                    background: currentPageName === page ? 'rgba(249,115,22,0.08)' : 'transparent',
+                  }}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Icon className="w-5 h-5" style={{ color: '#e8356d' }} />
+                  {Icon && <Icon className="w-5 h-5 flex-shrink-0" style={{ color: '#f97316' }} />}
                   {label}
                 </Link>
               ))}
+              {/* Mobile user actions if not logged in */}
+              {!user && (
+                <div className="pt-3 pb-1 border-t mt-2" style={{ borderColor: 'rgba(249,115,22,0.2)' }}>
+                  <Link to={createPageUrl('Login')} onClick={() => setMobileMenuOpen(false)}>
+                    <div className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white"
+                      style={{ background: '#f97316' }}>
+                      Sign In
+                    </div>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}

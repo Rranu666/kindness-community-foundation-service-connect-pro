@@ -130,19 +130,19 @@ export default function CustomerProfile() {
 
   if (!user) {
     return (
-      <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+      <div style={{ background: '#0f0900' }} className="min-h-screen py-10">
         <div className="max-w-4xl mx-auto px-4"><Skeleton className="h-96" /></div>
       </div>
     );
   }
 
   return (
-    <div style={{ background: '#0d0d1f' }} className="min-h-screen py-10">
+    <div style={{ background: '#0f0900' }} className="min-h-screen py-6 sm:py-10">
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white"
-            style={{ background: 'linear-gradient(135deg, #e8356d, #9333ea)' }}>
+            style={{ background: 'linear-gradient(135deg, #f97316, #ef4444)' }}>
             {user.full_name?.charAt(0) || user.email?.charAt(0)}
           </div>
           <div>
@@ -152,10 +152,10 @@ export default function CustomerProfile() {
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(232,53,109,0.2)' }}
-            className="grid w-full grid-cols-5 border mb-6">
+          <TabsList style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)' }}
+            className="grid w-full grid-cols-3 sm:grid-cols-5 border mb-6 h-auto gap-0.5 p-1">
             {['profile', 'addresses', 'saved', 'reviews', 'settings'].map((tab) => (
-              <TabsTrigger key={tab} value={tab} className="text-white text-xs data-[state=active]:bg-pink-500/20 capitalize">
+              <TabsTrigger key={tab} value={tab} className="text-white text-xs data-[state=active]:bg-pink-500/20 capitalize py-2">
                 {tab === 'saved' ? 'Saved' : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </TabsTrigger>
             ))}
@@ -163,7 +163,7 @@ export default function CustomerProfile() {
 
           {/* ── Profile Tab ── */}
           <TabsContent value="profile" className="mt-0">
-            <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+            <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-white">Personal Information</CardTitle>
@@ -179,7 +179,7 @@ export default function CustomerProfile() {
                 <div>
                   <label className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>Email</label>
                   <div className="flex items-center gap-2 mt-1 p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                    <Mail className="w-4 h-4" style={{ color: '#e8356d' }} />
+                    <Mail className="w-4 h-4" style={{ color: '#f97316' }} />
                     <p className="text-white">{user.email}</p>
                   </div>
                 </div>
@@ -195,18 +195,18 @@ export default function CustomerProfile() {
                     <Input type="tel" value={formData.phone || ''}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       placeholder="Enter phone number"
-                      style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                      style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                       className="placeholder:text-gray-500" />
                   ) : (
                     <div className="flex items-center gap-2 p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                      <Phone className="w-4 h-4" style={{ color: '#e8356d' }} />
+                      <Phone className="w-4 h-4" style={{ color: '#f97316' }} />
                       <p className="text-white">{formData.phone || 'Not provided'}</p>
                     </div>
                   )}
                 </div>
                 {editMode && (
                   <div className="flex gap-3 pt-2">
-                    <Button className="flex-1 text-white" style={{ background: '#e8356d' }}
+                    <Button className="flex-1 text-white" style={{ background: '#f97316' }}
                       onClick={() => updateProfileMutation.mutate()}
                       disabled={updateProfileMutation.isPending}>
                       <Save className="w-4 h-4 mr-2" />
@@ -223,18 +223,18 @@ export default function CustomerProfile() {
           {/* ── Addresses Tab ── */}
           <TabsContent value="addresses" className="mt-0 space-y-4">
             {addressesLoading ? <Skeleton className="h-40" /> : addresses.map((address) => (
-              <Card key={address.id} style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+              <Card key={address.id} style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-white font-semibold">{address.label}</h3>
                         {address.is_default && (
-                          <span className="text-xs px-2 py-0.5 rounded-full text-white" style={{ background: '#e8356d' }}>Default</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full text-white" style={{ background: '#f97316' }}>Default</span>
                         )}
                       </div>
                       <div className="flex items-start gap-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                        <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#e8356d' }} />
+                        <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#f97316' }} />
                         <div className="text-sm">
                           <p>{address.street}</p>
                           <p>{address.city}{address.postal_code ? `, ${address.postal_code}` : ''}</p>
@@ -255,18 +255,18 @@ export default function CustomerProfile() {
 
             <Dialog open={openAddAddress} onOpenChange={setOpenAddAddress}>
               <DialogTrigger asChild>
-                <Button className="w-full text-white" style={{ background: '#e8356d' }}>
+                <Button className="w-full text-white" style={{ background: '#f97316' }}>
                   <Plus className="w-4 h-4 mr-2" /> Add New Address
                 </Button>
               </DialogTrigger>
-              <DialogContent style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.3)' }}>
+              <DialogContent style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)' }}>
                 <DialogHeader><DialogTitle className="text-white">Add New Address</DialogTitle></DialogHeader>
                 <div className="space-y-4">
                   <div>
                     <label className="text-white text-sm mb-2 block">Label</label>
                     <select value={newAddress.label}
                       onChange={(e) => setNewAddress({ ...newAddress, label: e.target.value })}
-                      style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                      style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                       className="w-full rounded-md border p-2">
                       <option>Home</option><option>Work</option><option>Other</option>
                     </select>
@@ -276,11 +276,11 @@ export default function CustomerProfile() {
                       <label className="text-white text-sm mb-2 block capitalize">{field.replace('_', ' ')}</label>
                       <Input placeholder={field.replace('_', ' ')} value={newAddress[field]}
                         onChange={(e) => setNewAddress({ ...newAddress, [field]: e.target.value })}
-                        style={{ background: '#0d0d1f', borderColor: 'rgba(232,53,109,0.2)', color: '#fff' }}
+                        style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
                         className="placeholder:text-gray-500" />
                     </div>
                   ))}
-                  <Button className="w-full text-white" style={{ background: '#e8356d' }}
+                  <Button className="w-full text-white" style={{ background: '#f97316' }}
                     onClick={() => addAddressMutation.mutate()}
                     disabled={addAddressMutation.isPending}>
                     {addAddressMutation.isPending ? 'Adding...' : 'Add Address'}
@@ -295,11 +295,11 @@ export default function CustomerProfile() {
             {savedProviders.length > 0 ? (
               <div className="space-y-3">
                 {savedProviders.map((provider) => (
-                  <Card key={provider.id} style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+                  <Card key={provider.id} style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
-                          style={{ background: 'linear-gradient(135deg, #e8356d, #9333ea)' }}>
+                          style={{ background: 'linear-gradient(135deg, #f97316, #ef4444)' }}>
                           {provider.profile_image ? (
                             <img src={provider.profile_image} alt="" className="w-full h-full object-cover" />
                           ) : (
@@ -325,7 +325,7 @@ export default function CustomerProfile() {
                         </div>
                         <div className="flex gap-2">
                           <Link to={createPageUrl(`ProviderProfile?id=${provider.id}`)}>
-                            <Button size="sm" style={{ background: '#e8356d' }} className="text-white text-xs">View</Button>
+                            <Button size="sm" style={{ background: '#f97316' }} className="text-white text-xs">View</Button>
                           </Link>
                           <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-400/10"
                             onClick={() => removeSavedProvider.mutate(provider.id)}>
@@ -342,7 +342,7 @@ export default function CustomerProfile() {
                 <Heart className="w-10 h-10 mx-auto mb-3" style={{ color: 'rgba(255,255,255,0.2)' }} />
                 <p style={{ color: 'rgba(255,255,255,0.5)' }}>No saved providers yet</p>
                 <Link to={createPageUrl('Browse')}>
-                  <Button size="sm" style={{ background: '#e8356d' }} className="mt-4 text-white">Browse Providers</Button>
+                  <Button size="sm" style={{ background: '#f97316' }} className="mt-4 text-white">Browse Providers</Button>
                 </Link>
               </div>
             )}
@@ -353,7 +353,7 @@ export default function CustomerProfile() {
             {reviews.length > 0 ? (
               <div className="space-y-3">
                 {reviews.map((review) => (
-                  <Card key={review.id} style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
+                  <Card key={review.id} style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex gap-1">
@@ -381,8 +381,8 @@ export default function CustomerProfile() {
           {/* ── Settings Tab ── */}
           <TabsContent value="settings" className="mt-0 space-y-4">
             {/* Language */}
-            <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Globe className="w-5 h-5" style={{ color: '#e8356d' }} />Language & Region</CardTitle></CardHeader>
+            <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Globe className="w-5 h-5" style={{ color: '#f97316' }} />Language & Region</CardTitle></CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {LANGUAGES.map((lang) => (
@@ -390,9 +390,9 @@ export default function CustomerProfile() {
                       onClick={() => handleLangChange(lang.code)}
                       className="p-3 rounded-xl text-sm font-medium transition-all border"
                       style={{
-                        background: selectedLang === lang.code ? 'rgba(232,53,109,0.15)' : 'rgba(255,255,255,0.04)',
-                        borderColor: selectedLang === lang.code ? '#e8356d' : 'rgba(255,255,255,0.1)',
-                        color: selectedLang === lang.code ? '#e8356d' : 'rgba(255,255,255,0.7)'
+                        background: selectedLang === lang.code ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
+                        borderColor: selectedLang === lang.code ? '#f97316' : 'rgba(255,255,255,0.1)',
+                        color: selectedLang === lang.code ? '#f97316' : 'rgba(255,255,255,0.7)'
                       }}>
                       {lang.label}
                       {lang.dir === 'rtl' && <span className="ml-1 text-xs opacity-60">(RTL)</span>}
@@ -403,8 +403,8 @@ export default function CustomerProfile() {
             </Card>
 
             {/* Notifications */}
-            <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Bell className="w-5 h-5" style={{ color: '#e8356d' }} />Notifications</CardTitle></CardHeader>
+            <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Bell className="w-5 h-5" style={{ color: '#f97316' }} />Notifications</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 {[
                   { key: 'email', label: 'Email Notifications', desc: 'Booking updates, confirmations' },
@@ -426,8 +426,8 @@ export default function CustomerProfile() {
             </Card>
 
             {/* Security */}
-            <Card style={{ background: '#13132a', border: '1px solid rgba(232,53,109,0.2)' }}>
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Shield className="w-5 h-5" style={{ color: '#e8356d' }} />Account</CardTitle></CardHeader>
+            <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Shield className="w-5 h-5" style={{ color: '#f97316' }} />Account</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 <Button variant="outline" className="w-full justify-start text-white border-white/10 hover:bg-white/5"
                   onClick={() => base44.auth.logout()}>

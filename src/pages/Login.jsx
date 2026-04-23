@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
-const PINK = '#e8356d';
+const PINK = '#f97316';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ export default function Login() {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: 'linear-gradient(135deg, #0d0d1f 0%, #1a0a2e 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #0f0900 0%, #1a0c00 100%)' }}
     >
       <div className="w-full max-w-md">
         {/* Logo */}
@@ -98,7 +98,7 @@ export default function Login() {
         </div>
 
         {/* Card */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-8 backdrop-blur-sm">
           <h1 className="text-2xl font-bold text-white text-center mb-2">
             {mode === 'login' && 'Welcome back'}
             {mode === 'signup' && 'Create an account'}
