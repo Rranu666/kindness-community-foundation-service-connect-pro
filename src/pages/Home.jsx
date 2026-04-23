@@ -233,13 +233,21 @@ function useScrollReveal({ threshold = 0.14, rootMargin = '0px 0px -50px 0px', s
       });
     }, { threshold, rootMargin });
 
+    // Observe nodes that registered before the observer was ready
+    nodesRef.current.forEach(el => {
+      if (el && el.isConnected) observerRef.current.observe(el);
+    });
+
     return () => observerRef.current?.disconnect();
   }, []);
 
   const revealRef = useCallback((el) => {
     if (!el || nodesRef.current.has(el)) return;
     nodesRef.current.add(el);
-    observerRef.current?.observe(el);
+    if (observerRef.current) {
+      observerRef.current.observe(el);
+    }
+    // If observer not ready yet, the useEffect above will pick it up
   }, []);
 
   return revealRef;
