@@ -63,7 +63,7 @@ export default function Support() {
               <Phone className="w-8 h-8 mx-auto mb-3" style={{ color: '#cb3c7a' }} />
               <h3 className="text-white font-semibold mb-2">Call Us</h3>
               <p style={{ color: 'rgba(255,255,255,0.6)' }} className="text-sm mb-4">
-                +1 (555) 123-4567
+                +1 (949) 996-3051
               </p>
               <Button variant="outline" className="text-white border-pink-500/50 hover:bg-pink-500/10" style={{ background: 'transparent' }}>
                 Schedule Call
