@@ -65,7 +65,7 @@ export default function NotificationCenter() {
           {unreadCount > 0 && (
             <span
               className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center"
-              style={{ background: '#f97316', color: '#fff' }}
+              style={{ background: '#cb3c7a', color: '#fff' }}
             >
               {unreadCount}
             </span>
@@ -73,7 +73,7 @@ export default function NotificationCenter() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)' }} className="max-w-md">
+      <DialogContent style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)' }} className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">Notifications</DialogTitle>
         </DialogHeader>
@@ -91,8 +91,8 @@ export default function NotificationCenter() {
                 key={notification.id}
                 className="p-3 rounded-lg border transition-colors cursor-pointer"
                 style={{
-                  background: notification.is_read ? 'rgba(255,255,255,0.03)' : 'rgba(249,115,22,0.1)',
-                  borderColor: notification.is_read ? 'rgba(255,255,255,0.08)' : 'rgba(249,115,22,0.25)'
+                  background: notification.is_read ? 'rgba(255,255,255,0.03)' : 'rgba(203,60,122,0.1)',
+                  borderColor: notification.is_read ? 'rgba(255,255,255,0.08)' : 'rgba(203,60,122,0.25)'
                 }}
                 onClick={() => !notification.is_read && markAsReadMutation.mutate(notification.id)}
               >
@@ -118,7 +118,7 @@ export default function NotificationCenter() {
                           markAsReadMutation.mutate(notification.id);
                         }}
                       >
-                        <Check className="w-3 h-3" style={{ color: '#f97316' }} />
+                        <Check className="w-3 h-3" style={{ color: '#cb3c7a' }} />
                       </Button>
                     )}
                     <Button

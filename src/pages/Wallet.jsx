@@ -93,7 +93,7 @@ export default function WalletPage() {
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8">My Wallet</h1>
 
         {/* Wallet Balance */}
-        <Card style={{ background: 'linear-gradient(135deg, #1a0c00 0%, #0f0900 100%)', border: '1px solid rgba(249,115,22,0.3)' }} className="mb-6 sm:mb-8">
+        <Card style={{ background: 'linear-gradient(135deg, #1a0c00 0%, #0f0900 100%)', border: '1px solid rgba(203,60,122,0.3)' }} className="mb-6 sm:mb-8">
           <CardContent className="pt-6 sm:pt-8 pb-6 sm:pb-8">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div>
@@ -105,12 +105,12 @@ export default function WalletPage() {
               </div>
               <Dialog open={openAddMoney} onOpenChange={setOpenAddMoney}>
                 <DialogTrigger asChild>
-                  <Button size="lg" style={{ background: '#f97316' }} className="text-white hover:opacity-90 w-full sm:w-auto">
+                  <Button size="lg" style={{ background: '#cb3c7a' }} className="text-white hover:opacity-90 w-full sm:w-auto">
                     <Plus className="w-5 h-5 mr-2" />
                     Add Money
                   </Button>
                 </DialogTrigger>
-                <DialogContent style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)' }}>
+                <DialogContent style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)' }}>
                   <DialogHeader>
                     <DialogTitle className="text-white">Add Money to Wallet</DialogTitle>
                   </DialogHeader>
@@ -122,13 +122,13 @@ export default function WalletPage() {
                         placeholder="Enter amount"
                         value={addMoneyAmount}
                         onChange={(e) => setAddMoneyAmount(e.target.value)}
-                        style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
+                        style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
                         className="text-white placeholder:text-gray-500"
                       />
                     </div>
                     <Button
                       className="w-full text-white"
-                      style={{ background: '#f97316' }}
+                      style={{ background: '#cb3c7a' }}
                       onClick={() => addMoneyMutation.mutate()}
                       disabled={addMoneyMutation.isPending || !addMoneyAmount}
                     >
@@ -142,7 +142,7 @@ export default function WalletPage() {
         </Card>
 
         {/* Transaction History */}
-        <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+        <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
           <CardHeader>
             <CardTitle className="text-white">Transaction History</CardTitle>
           </CardHeader>
@@ -156,7 +156,7 @@ export default function WalletPage() {
             ) : transactions.length > 0 ? (
               <div className="space-y-3">
                 {transactions.map((tx) => (
-                  <div key={tx.id} className="flex items-center justify-between p-4 rounded-lg" style={{ background: 'rgba(249,115,22,0.05)' }}>
+                  <div key={tx.id} className="flex items-center justify-between p-4 rounded-lg" style={{ background: 'rgba(203,60,122,0.05)' }}>
                     <div className="flex items-center gap-3 flex-1">
                       {tx.type === 'credit' ? (
                         <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.2)' }}>

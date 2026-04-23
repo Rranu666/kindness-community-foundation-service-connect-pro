@@ -7,7 +7,7 @@ import {
   Search, Briefcase, Shield, Star, CreditCard, ArrowRight, ChevronRight, ChevronLeft, CheckCircle
 } from 'lucide-react';
 
-const PINK = '#f97316';
+const PINK = '#cb3c7a';
 
 const STEPS = [
   {
@@ -76,7 +76,7 @@ export default function OnboardingModal({ open, onClose }) {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
         className="p-0 overflow-hidden max-w-md w-full"
-        style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 20 }}
+        style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)', borderRadius: 20 }}
       >
         <DialogTitle className="sr-only">Welcome to Service Connect Pro</DialogTitle>
         {/* Progress bar */}
@@ -92,7 +92,7 @@ export default function OnboardingModal({ open, onClose }) {
             /* Feature walkthrough */
             <div className="text-center">
               <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.2)' }}>
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(203,60,122,0.12)', border: '1px solid rgba(203,60,122,0.2)' }}>
                   {currentStep.icon}
                 </div>
               </div>
@@ -102,7 +102,7 @@ export default function OnboardingModal({ open, onClose }) {
               )}
               <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.65)' }}>{currentStep.description}</p>
               {currentStep.highlight && (
-                <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold" style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', color: PINK }}>
+                <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold" style={{ background: 'rgba(203,60,122,0.1)', border: '1px solid rgba(203,60,122,0.25)', color: PINK }}>
                   <CheckCircle className="w-3 h-3" />
                   {currentStep.highlight}
                 </div>
@@ -155,13 +155,13 @@ export default function OnboardingModal({ open, onClose }) {
                 <button
                   className="w-full rounded-2xl p-4 text-left transition-all"
                   style={{
-                    background: selectedRole === 'customer' ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
+                    background: selectedRole === 'customer' ? 'rgba(203,60,122,0.15)' : 'rgba(255,255,255,0.04)',
                     border: `2px solid ${selectedRole === 'customer' ? PINK : 'rgba(255,255,255,0.1)'}`,
                   }}
                   onClick={() => setSelectedRole('customer')}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: 'rgba(249,115,22,0.15)' }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: 'rgba(203,60,122,0.15)' }}>
                       🔍
                     </div>
                     <div>
@@ -175,13 +175,13 @@ export default function OnboardingModal({ open, onClose }) {
                 <button
                   className="w-full rounded-2xl p-4 text-left transition-all"
                   style={{
-                    background: selectedRole === 'provider' ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
+                    background: selectedRole === 'provider' ? 'rgba(203,60,122,0.15)' : 'rgba(255,255,255,0.04)',
                     border: `2px solid ${selectedRole === 'provider' ? PINK : 'rgba(255,255,255,0.1)'}`,
                   }}
                   onClick={() => setSelectedRole('provider')}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: 'rgba(249,115,22,0.15)' }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: 'rgba(203,60,122,0.15)' }}>
                       🛠️
                     </div>
                     <div>

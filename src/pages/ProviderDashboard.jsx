@@ -272,12 +272,12 @@ export default function ProviderDashboard() {
   if (!provider) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0900' }}>
-        <Card style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="max-w-md w-full mx-6 border">
+        <Card style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="max-w-md w-full mx-6 border">
           <CardContent className="pt-8 text-center">
             <h2 className="text-xl font-semibold text-white mb-2">No Business Profile</h2>
             <p style={{ color: 'rgba(255,255,255,0.6)' }} className="mb-6">Register your business to start receiving orders</p>
             <Link to={createPageUrl('ProviderSignup')}>
-              <Button className="text-white" style={{ background: '#f97316' }}>Register Business</Button>
+              <Button className="text-white" style={{ background: '#cb3c7a' }}>Register Business</Button>
             </Link>
           </CardContent>
         </Card>
@@ -288,10 +288,10 @@ export default function ProviderDashboard() {
   return (
     <div className="min-h-screen" style={{ background: '#0f0900' }}>
       {/* Header */}
-      <header style={{ background: '#140b00', borderBottom: '1px solid rgba(249,115,22,0.2)' }} className="py-3 sm:py-4">
+      <header style={{ background: '#140b00', borderBottom: '1px solid rgba(203,60,122,0.2)' }} className="py-3 sm:py-4">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(135deg, #f97316, #ef4444)' }}>
+            <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(135deg, #cb3c7a, #ef4444)' }}>
               {provider.profile_image ? (
                 <img src={provider.profile_image} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -333,12 +333,12 @@ export default function ProviderDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           {[
             { label: 'Total Earnings', value: `$${totalEarnings.toFixed(0)}`, icon: DollarSign, color: '#10b981' },
-            { label: 'Available', value: `$${availableBalance.toFixed(0)}`, icon: Wallet, color: '#f97316' },
+            { label: 'Available', value: `$${availableBalance.toFixed(0)}`, icon: Wallet, color: '#cb3c7a' },
             { label: 'New Orders', value: newOrders.length, icon: AlertCircle, color: '#fbbf24' },
             { label: 'Active Jobs', value: activeOrders.length, icon: Play, color: '#8b5cf6' },
             { label: 'Rating', value: provider.rating?.toFixed(1) || 'N/A', icon: Star, color: '#f59e0b' },
           ].map(({ label, value, icon: Icon, color }) => (
-            <Card key={label} style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="border">
+            <Card key={label} style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2">
                   <Icon className="w-5 h-5" style={{ color }} />
@@ -354,7 +354,7 @@ export default function ProviderDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="new">
-          <TabsList style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)' }} className="border flex-wrap h-auto gap-1 p-1">
+          <TabsList style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(203,60,122,0.2)' }} className="border flex-wrap h-auto gap-1 p-1">
             {[
               { value: 'new', label: `New (${newOrders.length})`, icon: AlertCircle },
               { value: 'active', label: `Active (${activeOrders.length})`, icon: Play },
@@ -411,7 +411,7 @@ export default function ProviderDashboard() {
                           </Button>
                         )}
                         {order.status === 'in_progress' && (
-                          <Button size="sm" style={{ background: '#f97316' }} className="text-white"
+                          <Button size="sm" style={{ background: '#cb3c7a' }} className="text-white"
                             onClick={() => { setWorkflowOrder(order); setProofImages([]); }}>
                             <Square className="w-4 h-4 mr-1" /> End & Complete
                           </Button>
@@ -450,7 +450,7 @@ export default function ProviderDashboard() {
           {/* SERVICES Tab */}
           <TabsContent value="services" className="mt-4">
             <div className="flex justify-end mb-4">
-              <Button className="text-white" style={{ background: '#f97316' }} onClick={openNewService}>
+              <Button className="text-white" style={{ background: '#cb3c7a' }} onClick={openNewService}>
                 <Plus className="w-4 h-4 mr-2" /> Add Service
               </Button>
             </div>
@@ -458,7 +458,7 @@ export default function ProviderDashboard() {
               <div className="grid gap-3">
                 {services.map((service) => (
 
-                  <Card key={service.id} style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="border">
+                  <Card key={service.id} style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -510,11 +510,11 @@ export default function ProviderDashboard() {
             {reviews.length > 0 ? (
               <div className="space-y-3">
                 {reviews.map((review) => (
-                  <Card key={review.id} style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="border">
+                  <Card key={review.id} style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
-                          style={{ background: 'rgba(249,115,22,0.2)', color: '#f97316' }}>
+                          style={{ background: 'rgba(203,60,122,0.2)', color: '#cb3c7a' }}>
                           {review.customer_name?.charAt(0)?.toUpperCase()}
                         </div>
                         <div className="flex-1">
@@ -539,10 +539,10 @@ export default function ProviderDashboard() {
 
           {/* AVAILABILITY Tab */}
           <TabsContent value="availability" className="mt-4">
-            <Card style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="border">
+            <Card style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <Calendar className="w-5 h-5" style={{ color: '#f97316' }} />
+                  <Calendar className="w-5 h-5" style={{ color: '#cb3c7a' }} />
                   Availability Calendar
                 </CardTitle>
               </CardHeader>
@@ -562,9 +562,9 @@ export default function ProviderDashboard() {
                           }}
                           className="p-3 rounded-xl text-sm font-medium transition-all border"
                           style={{
-                            background: active ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
-                            borderColor: active ? '#f97316' : 'rgba(255,255,255,0.1)',
-                            color: active ? '#f97316' : 'rgba(255,255,255,0.6)'
+                            background: active ? 'rgba(203,60,122,0.15)' : 'rgba(255,255,255,0.04)',
+                            borderColor: active ? '#cb3c7a' : 'rgba(255,255,255,0.1)',
+                            color: active ? '#cb3c7a' : 'rgba(255,255,255,0.6)'
                           }}>
                           {day.slice(0, 3)}
                         </button>
@@ -587,7 +587,7 @@ export default function ProviderDashboard() {
             </Card>
 
             {/* Upcoming Schedule */}
-            <Card style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="border mt-4">
+            <Card style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border mt-4">
               <CardHeader>
                 <CardTitle className="text-white text-base">Upcoming Jobs</CardTitle>
               </CardHeader>
@@ -596,7 +596,7 @@ export default function ProviderDashboard() {
                   <div className="space-y-2">
                     {activeOrders.slice(0, 5).map(order => (
                       <div key={order.id} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                        <div className="w-2 h-2 rounded-full" style={{ background: '#f97316' }} />
+                        <div className="w-2 h-2 rounded-full" style={{ background: '#cb3c7a' }} />
                         <div className="flex-1">
                           <p className="text-white text-sm font-medium">{order.service_name}</p>
                           <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{order.scheduled_date} · {order.scheduled_time}</p>
@@ -631,12 +631,12 @@ export default function ProviderDashboard() {
 
       {/* Workflow: Complete Service Dialog */}
       <Dialog open={!!workflowOrder} onOpenChange={() => setWorkflowOrder(null)}>
-        <DialogContent style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.3)' }} className="border">
+        <DialogContent style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.3)' }} className="border">
           <DialogHeader>
             <DialogTitle className="text-white">Complete Service</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="p-3 rounded-lg" style={{ background: 'rgba(249,115,22,0.08)' }}>
+            <div className="p-3 rounded-lg" style={{ background: 'rgba(203,60,122,0.08)' }}>
               <p className="text-white font-medium">{workflowOrder?.service_name}</p>
               <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>for {workflowOrder?.customer_name}</p>
             </div>
@@ -648,8 +648,8 @@ export default function ProviderDashboard() {
                   <img key={i} src={url} alt="" className="w-full h-20 object-cover rounded-lg" />
                 ))}
                 <label className="h-20 rounded-lg border-dashed border-2 flex flex-col items-center justify-center cursor-pointer"
-                  style={{ borderColor: 'rgba(249,115,22,0.3)', background: 'rgba(255,255,255,0.03)' }}>
-                  {uploadingProof ? <div className="w-5 h-5 border-2 border-pink-400 border-t-transparent rounded-full animate-spin" /> : <Camera className="w-6 h-6" style={{ color: '#f97316' }} />}
+                  style={{ borderColor: 'rgba(203,60,122,0.3)', background: 'rgba(255,255,255,0.03)' }}>
+                  {uploadingProof ? <div className="w-5 h-5 border-2 border-pink-400 border-t-transparent rounded-full animate-spin" /> : <Camera className="w-6 h-6" style={{ color: '#cb3c7a' }} />}
                   <span className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Add Photo</span>
                   <input type="file" accept="image/*" className="hidden" onChange={handleProofUpload} disabled={uploadingProof} />
                 </label>
@@ -676,7 +676,7 @@ export default function ProviderDashboard() {
 
       {/* Edit Profile Dialog */}
       <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
-        <DialogContent style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.3)' }} className="border max-h-[90vh] overflow-y-auto">
+        <DialogContent style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.3)' }} className="border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-white">Edit Business Profile</DialogTitle>
           </DialogHeader>
@@ -692,14 +692,14 @@ export default function ProviderDashboard() {
                 <Label className="text-white">{label}</Label>
                 <Input type={type} value={profileForm[key] || ''}
                   onChange={e => setProfileForm({ ...profileForm, [key]: e.target.value })}
-                  style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }} />
+                  style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }} />
               </div>
             ))}
             <div>
               <Label className="text-white">Description</Label>
               <Textarea value={profileForm.description || ''} rows={3}
                 onChange={e => setProfileForm({ ...profileForm, description: e.target.value })}
-                style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }} />
+                style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }} />
             </div>
             <div>
               <Label className="text-white mb-2 block">Availability</Label>
@@ -708,8 +708,8 @@ export default function ProviderDashboard() {
                   <button key={day} type="button" onClick={() => toggleDay(day)}
                     className="px-3 py-1.5 rounded-lg text-sm transition-all border"
                     style={{
-                      background: availabilityDays.includes(day) ? '#f97316' : 'rgba(255,255,255,0.06)',
-                      borderColor: availabilityDays.includes(day) ? '#f97316' : 'rgba(255,255,255,0.1)',
+                      background: availabilityDays.includes(day) ? '#cb3c7a' : 'rgba(255,255,255,0.06)',
+                      borderColor: availabilityDays.includes(day) ? '#cb3c7a' : 'rgba(255,255,255,0.1)',
                       color: availabilityDays.includes(day) ? '#fff' : 'rgba(255,255,255,0.6)'
                     }}>
                     {day.slice(0, 3)}
@@ -717,7 +717,7 @@ export default function ProviderDashboard() {
                 ))}
               </div>
             </div>
-            <Button className="w-full text-white" style={{ background: '#f97316' }}
+            <Button className="w-full text-white" style={{ background: '#cb3c7a' }}
               onClick={handleProfileSave} disabled={updateProviderMutation.isPending}>
               {updateProviderMutation.isPending ? 'Saving...' : 'Save Profile'}
             </Button>
@@ -731,7 +731,7 @@ export default function ProviderDashboard() {
 function OrderCard({ order, actions, onChat }) {
   const s = statusColors[order.status] || statusColors.pending;
   return (
-    <Card style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="border">
+    <Card style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
       <CardContent className="p-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex-1">
@@ -783,7 +783,7 @@ function OrderCard({ order, actions, onChat }) {
 
 function EmptyState({ icon: Icon, message }) {
   return (
-    <Card style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="border">
+    <Card style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
       <CardContent className="py-10 text-center">
         <Icon className="w-10 h-10 opacity-20 mx-auto mb-3 text-white" />
         <p style={{ color: 'rgba(255,255,255,0.5)' }}>{message}</p>

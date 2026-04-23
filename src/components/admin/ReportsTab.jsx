@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-const COLORS = ['#7c3aed', '#f97316', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'];
+const COLORS = ['#7c3aed', '#cb3c7a', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'];
 
 function StatCard({ label, value, sub, icon: Icon, color, trend }) {
   return (
@@ -117,7 +117,7 @@ function SalesReport({ orders }) {
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip formatter={v => [`$${v}`, 'Revenue']} />
-                <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="revenue" stroke="#cb3c7a" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -211,7 +211,7 @@ function CustomerReport({ orders, users }) {
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="count" fill="#f97316" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" fill="#cb3c7a" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -287,7 +287,7 @@ function ProviderReport({ orders, providers, reviews }) {
               <XAxis type="number" tick={{ fontSize: 10 }} />
               <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
               <Tooltip formatter={v => [`$${v}`, 'Revenue']} />
-              <Bar dataKey="revenue" fill="#f97316" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="revenue" fill="#cb3c7a" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -371,7 +371,7 @@ function ServicePerformanceReport({ orders, services, providers }) {
               <XAxis dataKey="name" tick={{ fontSize: 9 }} />
               <YAxis tick={{ fontSize: 10 }} />
               <Tooltip />
-              <Bar dataKey="orders" fill="#f97316" radius={[4, 4, 0, 0]} name="Orders" />
+              <Bar dataKey="orders" fill="#cb3c7a" radius={[4, 4, 0, 0]} name="Orders" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

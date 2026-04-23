@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
-const PINK = '#f97316';
+const PINK = '#cb3c7a';
 
 const priceTypeLabels = {
   fixed: 'Fixed',
@@ -18,9 +18,9 @@ export default function ServiceCard({ service, onBook }) {
   return (
     <div
       className="rounded-xl p-5 flex flex-col sm:flex-row sm:items-center gap-4 transition-colors"
-      style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.15)' }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(249,115,22,0.35)'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(249,115,22,0.15)'}
+      style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.15)' }}
+      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(203,60,122,0.35)'}
+      onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(203,60,122,0.15)'}
     >
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -44,7 +44,7 @@ export default function ServiceCard({ service, onBook }) {
               ~{service.duration_minutes} min
             </span>
           )}
-          <Badge variant="outline" className="text-xs" style={{ borderColor: 'rgba(249,115,22,0.25)', color: 'rgba(255,255,255,0.5)' }}>
+          <Badge variant="outline" className="text-xs" style={{ borderColor: 'rgba(203,60,122,0.25)', color: 'rgba(255,255,255,0.5)' }}>
             {priceTypeLabels[service.price_type] || 'Fixed'}
           </Badge>
         </div>
@@ -60,7 +60,7 @@ export default function ServiceCard({ service, onBook }) {
         <div className="flex gap-2">
           {service.id && (
             <Link to={createPageUrl(`ServiceDetails?id=${service.id}`)}>
-              <Button size="sm" variant="outline" className="text-white" style={{ borderColor: 'rgba(249,115,22,0.3)', background: 'transparent', height: 32 }}>
+              <Button size="sm" variant="outline" className="text-white" style={{ borderColor: 'rgba(203,60,122,0.3)', background: 'transparent', height: 32 }}>
                 Details
               </Button>
             </Link>

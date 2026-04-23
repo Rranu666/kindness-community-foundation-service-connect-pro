@@ -53,10 +53,10 @@ export default function Layout({ children, currentPageName }) {
           :root {
             --kcf-dark: #0f0900;
             --kcf-darker: #080500;
-            --kcf-pink: #f97316;
+            --kcf-pink: #cb3c7a;
             --kcf-pink-light: #fb923c;
             --kcf-card: #140b00;
-            --kcf-border: rgba(249,115,22,0.2);
+            --kcf-border: rgba(203,60,122,0.2);
           }
         `}</style>
         {children}
@@ -71,15 +71,15 @@ export default function Layout({ children, currentPageName }) {
         :root {
           --kcf-dark: #0f0900;
           --kcf-darker: #080500;
-          --kcf-pink: #f97316;
+          --kcf-pink: #cb3c7a;
           --kcf-pink-light: #fb923c;
           --kcf-card: #140b00;
-          --kcf-border: rgba(249,115,22,0.2);
+          --kcf-border: rgba(203,60,122,0.2);
         }
       `}</style>
 
       {/* Navigation */}
-      <nav style={{ background: 'rgba(15,9,0,0.95)', borderBottom: '1px solid rgba(249,115,22,0.2)' }} className="sticky top-0 z-50 backdrop-blur-md">
+      <nav style={{ background: 'rgba(15,9,0,0.95)', borderBottom: '1px solid rgba(203,60,122,0.2)' }} className="sticky top-0 z-50 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -100,9 +100,9 @@ export default function Layout({ children, currentPageName }) {
                   key={page}
                   to={createPageUrl(page)}
                   className="text-sm font-medium transition-colors"
-                  style={{ color: currentPageName === page ? '#f97316' : 'rgba(255,255,255,0.7)' }}
-                  onMouseEnter={e => e.target.style.color = '#f97316'}
-                  onMouseLeave={e => e.target.style.color = currentPageName === page ? '#f97316' : 'rgba(255,255,255,0.7)'}
+                  style={{ color: currentPageName === page ? '#cb3c7a' : 'rgba(255,255,255,0.7)' }}
+                  onMouseEnter={e => e.target.style.color = '#cb3c7a'}
+                  onMouseLeave={e => e.target.style.color = currentPageName === page ? '#cb3c7a' : 'rgba(255,255,255,0.7)'}
                 >
                   {label}
                 </Link>
@@ -125,14 +125,14 @@ export default function Layout({ children, currentPageName }) {
                   <span>{currentLang?.label}</span>
                 </button>
                 {langMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 rounded-xl overflow-hidden shadow-xl z-50" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.25)' }}>
+                  <div className="absolute right-0 mt-2 w-40 rounded-xl overflow-hidden shadow-xl z-50" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.25)' }}>
                     {LANGUAGES.map(lang => (
                       <button
                         key={lang.code}
                         className="w-full text-left px-4 py-2.5 text-sm"
                         style={{
-                          color: lang.code === selectedLang ? '#f97316' : 'rgba(255,255,255,0.75)',
-                          background: lang.code === selectedLang ? 'rgba(249,115,22,0.1)' : 'transparent',
+                          color: lang.code === selectedLang ? '#cb3c7a' : 'rgba(255,255,255,0.75)',
+                          background: lang.code === selectedLang ? 'rgba(203,60,122,0.1)' : 'transparent',
                           fontWeight: lang.code === selectedLang ? 600 : 400,
                         }}
                         onClick={() => handleLangChange(lang.code)}
@@ -149,7 +149,7 @@ export default function Layout({ children, currentPageName }) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10">
                       <Avatar className="w-8 h-8">
-                        <AvatarFallback style={{ background: '#f97316', color: '#fff' }}>
+                        <AvatarFallback style={{ background: '#cb3c7a', color: '#fff' }}>
                           {user.full_name?.charAt(0) || user.email?.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
@@ -158,7 +158,7 @@ export default function Layout({ children, currentPageName }) {
                       </span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 [&_[role=menuitem]]:focus:bg-white/10 [&_[role=menuitem]]:hover:bg-white/10" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)', color: '#fff' }}>
+                  <DropdownMenuContent align="end" className="w-48 [&_[role=menuitem]]:focus:bg-white/10 [&_[role=menuitem]]:hover:bg-white/10" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)', color: '#fff' }}>
                     <DropdownMenuItem asChild>
                       <Link to={createPageUrl('CustomerProfile')} className="flex items-center text-white hover:text-white">
                         <LayoutDashboard className="w-4 h-4 mr-2" />
@@ -177,7 +177,7 @@ export default function Layout({ children, currentPageName }) {
                         Wallet
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator style={{ background: 'rgba(249,115,22,0.2)' }} />
+                    <DropdownMenuSeparator style={{ background: 'rgba(203,60,122,0.2)' }} />
                     <DropdownMenuItem asChild>
                       <Link to={createPageUrl('ProviderDashboard')} className="flex items-center text-white hover:text-white">
                         <Building2 className="w-4 h-4 mr-2" />
@@ -212,7 +212,7 @@ export default function Layout({ children, currentPageName }) {
                         </DropdownMenuItem>
                       </>
                     )}
-                    <DropdownMenuSeparator style={{ background: 'rgba(249,115,22,0.2)' }} />
+                    <DropdownMenuSeparator style={{ background: 'rgba(203,60,122,0.2)' }} />
                     <DropdownMenuItem onClick={() => logout()} className="text-white hover:text-white cursor-pointer">
                       <LogOut className="w-4 h-4 mr-2" />
                       Logout
@@ -222,7 +222,7 @@ export default function Layout({ children, currentPageName }) {
               ) : (
                 <Button
                   onClick={() => navigate('/Login')}
-                  style={{ background: '#f97316', border: 'none' }}
+                  style={{ background: '#cb3c7a', border: 'none' }}
                   className="hover:opacity-90 text-white"
                 >
                   Sign In
@@ -244,7 +244,7 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div style={{ background: '#140b00', borderTop: '1px solid rgba(249,115,22,0.2)' }} className="md:hidden pb-4">
+          <div style={{ background: '#140b00', borderTop: '1px solid rgba(203,60,122,0.2)' }} className="md:hidden pb-4">
             <div className="px-4 pt-2 space-y-1">
               {[
                 { label: 'Home', page: 'Home', icon: Home },
@@ -258,21 +258,21 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl(page)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium"
                   style={{
-                    color: currentPageName === page ? '#f97316' : 'rgba(255,255,255,0.8)',
-                    background: currentPageName === page ? 'rgba(249,115,22,0.08)' : 'transparent',
+                    color: currentPageName === page ? '#cb3c7a' : 'rgba(255,255,255,0.8)',
+                    background: currentPageName === page ? 'rgba(203,60,122,0.08)' : 'transparent',
                   }}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  {Icon && <Icon className="w-5 h-5 flex-shrink-0" style={{ color: '#f97316' }} />}
+                  {Icon && <Icon className="w-5 h-5 flex-shrink-0" style={{ color: '#cb3c7a' }} />}
                   {label}
                 </Link>
               ))}
               {/* Mobile user actions if not logged in */}
               {!user && (
-                <div className="pt-3 pb-1 border-t mt-2" style={{ borderColor: 'rgba(249,115,22,0.2)' }}>
+                <div className="pt-3 pb-1 border-t mt-2" style={{ borderColor: 'rgba(203,60,122,0.2)' }}>
                   <Link to={createPageUrl('Login')} onClick={() => setMobileMenuOpen(false)}>
                     <div className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white"
-                      style={{ background: '#f97316' }}>
+                      style={{ background: '#cb3c7a' }}>
                       Sign In
                     </div>
                   </Link>

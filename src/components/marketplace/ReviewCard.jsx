@@ -2,12 +2,12 @@ import React from 'react';
 import { Star } from 'lucide-react';
 import { format } from 'date-fns';
 
-const PINK = '#f97316';
+const PINK = '#cb3c7a';
 
 export default function ReviewCard({ review, dark = false }) {
   if (dark) {
     return (
-      <div className="rounded-xl p-5" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.12)' }}>
+      <div className="rounded-xl p-5" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.12)' }}>
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-bold text-white text-sm" style={{ background: PINK }}>
             {review.customer_name?.charAt(0)?.toUpperCase() || 'A'}
@@ -36,7 +36,7 @@ export default function ReviewCard({ review, dark = false }) {
   return (
     <div className="bg-white rounded-xl p-5 border border-slate-100">
       <div className="flex items-start gap-4">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#cb3c7a] to-[#9b2d5c] flex items-center justify-center shrink-0">
           <span className="text-sm font-bold text-white">
             {review.customer_name?.charAt(0)?.toUpperCase() || 'A'}
           </span>

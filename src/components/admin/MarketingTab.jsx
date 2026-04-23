@@ -271,9 +271,9 @@ function FeaturedServicesSection({ services, providers, categories }) {
 
 // ── Banner / Ads Management ──
 function BannersSection() {
-  const blankBanner = { title: '', subtitle: '', cta_text: 'Book Now', cta_url: '/', image_url: '', bg_color: '#f97316', position: 'home_top', is_active: true };
+  const blankBanner = { title: '', subtitle: '', cta_text: 'Book Now', cta_url: '/', image_url: '', bg_color: '#cb3c7a', position: 'home_top', is_active: true };
   const [banners, setBanners] = useState([
-    { id: 1, title: '20% Off This Weekend', subtitle: 'On all cleaning services', cta_text: 'Book Now', cta_url: '/', image_url: '', bg_color: '#f97316', position: 'home_top', is_active: true },
+    { id: 1, title: '20% Off This Weekend', subtitle: 'On all cleaning services', cta_text: 'Book Now', cta_url: '/', image_url: '', bg_color: '#cb3c7a', position: 'home_top', is_active: true },
     { id: 2, title: 'New Providers in Your Area', subtitle: 'Check out the latest additions', cta_text: 'Browse', cta_url: '/Browse', image_url: '', bg_color: '#7c3aed', position: 'home_mid', is_active: false },
   ]);
   const [editing, setEditing] = useState(null);

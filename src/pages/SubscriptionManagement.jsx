@@ -99,10 +99,10 @@ export default function SubscriptionManagement() {
 
         {/* Current Subscription */}
         {currentSubscription && currentPlan && (
-          <Card style={{ background: 'rgba(249,115,22,0.1)', border: '2px solid #f97316' }} className="mb-8">
+          <Card style={{ background: 'rgba(203,60,122,0.1)', border: '2px solid #cb3c7a' }} className="mb-8">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3 mb-2">
-                <CreditCard className="w-5 h-5" style={{ color: '#f97316' }} />
+                <CreditCard className="w-5 h-5" style={{ color: '#cb3c7a' }} />
                 <h3 className="text-lg font-semibold text-white">Current Plan: {currentPlan.name}</h3>
               </div>
               <p style={{ color: 'rgba(255,255,255,0.6)' }} className="text-sm">
@@ -138,7 +138,7 @@ export default function SubscriptionManagement() {
         {/* Confirmation Dialog */}
         {selectedPlan && (
           <Dialog open={!!selectedPlan} onOpenChange={() => setSelectedPlan(null)}>
-            <DialogContent style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)' }}>
+            <DialogContent style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)' }}>
               <DialogHeader>
                 <DialogTitle className="text-white">Upgrade to {selectedPlan.name}</DialogTitle>
               </DialogHeader>
@@ -176,7 +176,7 @@ export default function SubscriptionManagement() {
                   </Button>
                   <Button
                     className="flex-1 text-white"
-                    style={{ background: '#f97316' }}
+                    style={{ background: '#cb3c7a' }}
                     onClick={() => selectPlanMutation.mutate(selectedPlan.id)}
                     disabled={selectPlanMutation.isPending}
                   >

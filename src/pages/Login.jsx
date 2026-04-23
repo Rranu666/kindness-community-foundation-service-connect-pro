@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
-const PINK = '#f97316';
+const PINK = '#cb3c7a';
 
 export default function Login() {
   const navigate = useNavigate();

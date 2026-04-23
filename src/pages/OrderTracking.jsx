@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const STATUS_TIMELINE = {
-  pending: { label: 'Booking Confirmed', step: 0, color: '#f97316' },
-  confirmed: { label: 'Provider Assigned', step: 1, color: '#f97316' },
+  pending: { label: 'Booking Confirmed', step: 0, color: '#cb3c7a' },
+  confirmed: { label: 'Provider Assigned', step: 1, color: '#cb3c7a' },
   in_progress: { label: 'On the Way', step: 2, color: '#3b82f6' },
   completed: { label: 'Service Completed', step: 3, color: '#10b981' },
   cancelled: { label: 'Cancelled', step: -1, color: '#ef4444' }
@@ -42,7 +42,7 @@ export default function OrderTracking() {
       <div style={{ background: '#0f0900' }} className="min-h-screen py-10">
         <div className="max-w-4xl mx-auto px-4">
           <Skeleton className="h-8 w-40 mb-8" />
-          <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+          <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
             <CardContent className="pt-6">
               <Skeleton className="h-96" />
             </CardContent>
@@ -74,7 +74,7 @@ export default function OrderTracking() {
         </div>
 
         {/* Status Timeline */}
-        <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+        <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
           <CardHeader>
             <CardTitle className="text-white">Service Status</CardTitle>
           </CardHeader>
@@ -107,7 +107,7 @@ export default function OrderTracking() {
         </Card>
 
         {/* Service Details */}
-        <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+        <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
           <CardHeader>
             <CardTitle className="text-white">Service Details</CardTitle>
           </CardHeader>
@@ -120,7 +120,7 @@ export default function OrderTracking() {
               <div>
                 <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>Service Address</p>
                 <p className="text-white font-semibold flex items-start gap-2">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#f97316' }} />
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#cb3c7a' }} />
                   {order.address}
                 </p>
               </div>
@@ -130,7 +130,7 @@ export default function OrderTracking() {
 
         {/* Provider Info */}
         {provider && (
-          <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+          <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
             <CardHeader>
               <CardTitle className="text-white">Service Provider</CardTitle>
             </CardHeader>
@@ -145,7 +145,7 @@ export default function OrderTracking() {
                 </div>
                 <Button
                   size="sm"
-                  style={{ background: '#f97316' }}
+                  style={{ background: '#cb3c7a' }}
                   className="text-white hover:opacity-90"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
@@ -157,7 +157,7 @@ export default function OrderTracking() {
         )}
 
         {/* Payment Summary */}
-        <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+        <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
           <CardHeader>
             <CardTitle className="text-white">Payment Summary</CardTitle>
           </CardHeader>

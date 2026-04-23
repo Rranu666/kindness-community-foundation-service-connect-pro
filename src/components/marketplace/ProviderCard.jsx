@@ -14,7 +14,7 @@ export default function ProviderCard({ provider }) {
       to={createPageUrl(`ProviderProfile?p=${slug}&id=${provider.id}`)}
       className="group rounded-2xl overflow-hidden transition-all duration-300"
       style={{ background: '#140b00', border: '1px solid rgba(255,255,255,0.06)' }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(249,115,22,0.1)'; }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(203,60,122,0.4)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(203,60,122,0.1)'; }}
       onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.boxShadow = 'none'; }}
     >
       <div className="relative h-40">
@@ -28,7 +28,7 @@ export default function ProviderCard({ provider }) {
             {(provider.avatar_url || provider.profile_image) ? (
               <img src={provider.avatar_url || provider.profile_image} alt={provider.business_name} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ef4444, #f97316)' }}>
+              <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ef4444, #cb3c7a)' }}>
                 <span className="text-2xl font-bold text-white">{provider.business_name?.charAt(0)}</span>
               </div>
             )}

@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ProviderCard from '@/components/marketplace/ProviderCard';
 import SearchBar from '@/components/marketplace/SearchBar';
 
-const PINK = '#f97316';
+const PINK = '#cb3c7a';
 
 const FALLBACK_CATEGORIES = [
   { id: 'ai-automation', name: 'AI & Automation' },
@@ -139,7 +139,7 @@ export default function Browse() {
       <div>
         <h4 className="font-medium text-white mb-3 text-sm">Category</h4>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="text-white" style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(249,115,22,0.2)' }}>
+          <SelectTrigger className="text-white" style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(203,60,122,0.2)' }}>
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
@@ -215,7 +215,7 @@ export default function Browse() {
   return (
     <div className="min-h-screen" style={{ background: '#0f0900' }}>
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg, #1a0c00 0%, #0f0900 100%)', borderBottom: '1px solid rgba(249,115,22,0.2)' }} className="py-8 sm:py-10">
+      <div style={{ background: 'linear-gradient(135deg, #1a0c00 0%, #0f0900 100%)', borderBottom: '1px solid rgba(203,60,122,0.2)' }} className="py-8 sm:py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Find Service Providers</h1>
           <p className="mb-4 sm:mb-6 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -227,7 +227,7 @@ export default function Browse() {
 
       {/* Category quick-filter chips */}
       {categories.length > 0 && (
-        <div className="border-b" style={{ borderColor: 'rgba(249,115,22,0.1)', background: '#140b00' }}>
+        <div className="border-b" style={{ borderColor: 'rgba(203,60,122,0.1)', background: '#140b00' }}>
           <div className="max-w-7xl mx-auto px-6 py-3 flex gap-2 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setSelectedCategory('all')}
@@ -266,7 +266,7 @@ export default function Browse() {
               {filteredProviders.length} provider{filteredProviders.length !== 1 ? 's' : ''} found
             </span>
             {activeFiltersCount > 0 && (
-              <Badge style={{ background: 'rgba(249,115,22,0.2)', color: PINK, border: `1px solid rgba(249,115,22,0.3)` }}>
+              <Badge style={{ background: 'rgba(203,60,122,0.2)', color: PINK, border: `1px solid rgba(203,60,122,0.3)` }}>
                 {activeFiltersCount} filter{activeFiltersCount !== 1 ? 's' : ''} active
               </Badge>
             )}
@@ -276,7 +276,7 @@ export default function Browse() {
             {/* Mobile Filter */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="lg:hidden flex-1 sm:flex-none text-white hover:bg-white/10 hover:text-white" style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }}>
+                <Button variant="outline" className="lg:hidden flex-1 sm:flex-none text-white hover:bg-white/10 hover:text-white" style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }}>
                   <SlidersHorizontal className="w-4 h-4 mr-2" />
                   Filters
                   {activeFiltersCount > 0 && (
@@ -284,7 +284,7 @@ export default function Browse() {
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)' }}>
+              <SheetContent side="left" style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)' }}>
                 <SheetHeader>
                   <SheetTitle className="text-white">Filters</SheetTitle>
                 </SheetHeader>
@@ -293,7 +293,7 @@ export default function Browse() {
             </Sheet>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-48 text-white" style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }}>
+              <SelectTrigger className="w-full sm:w-48 text-white" style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }}>
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -310,7 +310,7 @@ export default function Browse() {
         <div className="flex gap-8">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-64 shrink-0">
-            <div style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="rounded-2xl p-6 border sticky top-24">
+            <div style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="rounded-2xl p-6 border sticky top-24">
               <div className="flex items-center gap-2 mb-6">
                 <Filter className="w-5 h-5" style={{ color: PINK }} />
                 <h3 className="font-semibold text-white">Filters</h3>
@@ -324,7 +324,7 @@ export default function Browse() {
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {Array(6).fill(0).map((_, i) => (
-                  <div key={i} style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.2)' }} className="rounded-2xl border">
+                  <div key={i} style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="rounded-2xl border">
                     <Skeleton className="h-40 rounded-t-2xl opacity-30" />
                     <div className="p-6 pt-12">
                       <Skeleton className="h-5 w-32 mb-2 opacity-20" />
@@ -342,7 +342,7 @@ export default function Browse() {
               </div>
             ) : (
               <div className="text-center py-20">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(249,115,22,0.1)' }}>
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(203,60,122,0.1)' }}>
                   <Filter className="w-10 h-10" style={{ color: PINK }} />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">No providers found</h3>

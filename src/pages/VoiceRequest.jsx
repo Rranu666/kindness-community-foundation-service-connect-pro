@@ -16,7 +16,7 @@ import VoiceOrb from '@/components/voice/VoiceOrb';
 import AIInterpretationCard from '@/components/voice/AIInterpretationCard';
 import ProviderMatchList from '@/components/voice/ProviderMatchList';
 
-const PINK = '#f97316';
+const PINK = '#cb3c7a';
 const CYAN = '#fbbf24';
 
 const FALLBACK_CATEGORIES = [
@@ -327,7 +327,7 @@ Extract and return:
                 />
 
                 {/* Contact form */}
-                <div className="rounded-2xl p-6 space-y-4" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+                <div className="rounded-2xl p-6 space-y-4" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
                   <h3 className="font-bold text-white flex items-center gap-2">
                     <Phone className="w-4 h-4" style={{ color: PINK }} />
                     Your Contact Details
@@ -372,7 +372,7 @@ Extract and return:
         {/* PHASE: CONTACTING */}
         {phase === 'contacting' && (
           <div className="text-center py-16">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse" style={{ background: 'rgba(249,115,22,0.15)', border: '2px solid rgba(249,115,22,0.3)' }}>
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse" style={{ background: 'rgba(203,60,122,0.15)', border: '2px solid rgba(203,60,122,0.3)' }}>
               <Send className="w-10 h-10" style={{ color: PINK }} />
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Notifying providers...</h3>

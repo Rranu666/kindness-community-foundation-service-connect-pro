@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Logo from '@/components/Logo';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 
-const PINK = '#f97316';
+const PINK = '#cb3c7a';
 const CYAN = '#fbbf24';
 
 const SERVICE_CATEGORIES = [
@@ -33,7 +33,7 @@ const SERVICE_CATEGORIES = [
   { name: 'Technology', icon: Zap, desc: 'Web development, software, IT support and digital solutions', color: '#10b981' },
   { name: 'Health & Wellness', icon: HeartHandshake, desc: 'Personal training, nutrition, therapy and wellness coaching', color: '#f59e0b' },
   { name: 'Education & Training', icon: Award, desc: 'Tutoring, coaching, workshops and professional development', color: '#e879f9' },
-  { name: 'Marketing & Sales', icon: TrendingUp, desc: 'Social media, SEO, content creation and advertising', color: '#f97316' },
+  { name: 'Marketing & Sales', icon: TrendingUp, desc: 'Social media, SEO, content creation and advertising', color: '#cb3c7a' },
   { name: 'Legal & Compliance', icon: Shield, desc: 'Legal advice, contract review, compliance and documentation', color: '#06b6d4' },
   { name: 'Events & Hospitality', icon: Users, desc: 'Event planning, catering, photography and entertainment', color: '#84cc16' },
   { name: 'Consulting & Strategy', icon: Target, desc: 'Business strategy, operations, HR and organisational development', color: '#a78bfa' },
@@ -129,8 +129,8 @@ function useAnimationStyles() {
         50% { transform: translateY(-6px) rotate(-4deg); }
       }
       @keyframes pulseGlow {
-        0%,100% { box-shadow: 0 0 0px rgba(249,115,22,0.4); }
-        50% { box-shadow: 0 0 28px rgba(249,115,22,0.7), 0 0 56px rgba(249,115,22,0.25); }
+        0%,100% { box-shadow: 0 0 0px rgba(203,60,122,0.4); }
+        50% { box-shadow: 0 0 28px rgba(203,60,122,0.7), 0 0 56px rgba(203,60,122,0.25); }
       }
       @keyframes pulseGlowCyan {
         0%,100% { box-shadow: 0 0 0px rgba(251,191,36,0.3); }
@@ -373,13 +373,13 @@ const AmbientShapes = memo(() => {
       {/* Diamond TR */}
       <div style={{ position: 'absolute', top: '18%', right: '7%', width: 60, height: 60, border: `1.5px solid rgba(251,191,36,0.22)`, transform: 'rotate(45deg)', animation: 'floatYSlow 7s ease-in-out infinite 1.2s', willChange: 'transform' }} />
       {/* Circle BL */}
-      <div style={{ position: 'absolute', bottom: '22%', left: '8%', width: 40, height: 40, borderRadius: '50%', border: `1.5px solid rgba(249,115,22,0.18)`, animation: 'floatY 6s ease-in-out infinite 2.1s', willChange: 'transform' }} />
+      <div style={{ position: 'absolute', bottom: '22%', left: '8%', width: 40, height: 40, borderRadius: '50%', border: `1.5px solid rgba(203,60,122,0.18)`, animation: 'floatY 6s ease-in-out infinite 2.1s', willChange: 'transform' }} />
       {/* Octagon CR */}
       <svg width="90" height="90" viewBox="0 0 90 90" style={{ position: 'absolute', top: '40%', right: '3%', animation: 'floatYSlow 9s ease-in-out infinite 0.4s, rotateZ 32s linear infinite reverse', willChange: 'transform', opacity: 0.12 }}>
         <polygon points="27,6 63,6 84,27 84,63 63,84 27,84 6,63 6,27" fill="none" stroke={CYAN} strokeWidth="1.5" />
       </svg>
       {/* Glow blob BC */}
-      <div style={{ position: 'absolute', bottom: '10%', left: '40%', width: 320, height: 180, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(249,115,22,0.09) 0%, transparent 70%)', filter: 'blur(40px)', animation: 'floatY 8s ease-in-out infinite', willChange: 'transform' }} />
+      <div style={{ position: 'absolute', bottom: '10%', left: '40%', width: 320, height: 180, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(203,60,122,0.09) 0%, transparent 70%)', filter: 'blur(40px)', animation: 'floatY 8s ease-in-out infinite', willChange: 'transform' }} />
       {/* Dot grid TL */}
       <svg width="120" height="80" viewBox="0 0 120 80" style={{ position: 'absolute', top: '5%', right: '18%', opacity: 0.1 }}>
         {Array.from({ length: 20 }, (_, i) => (
@@ -401,7 +401,7 @@ const ScrollIndicator = () => {
   return (
     <div aria-hidden="true" style={{ position: 'absolute', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, pointerEvents: 'none' }}>
       <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase' }}>Scroll</span>
-      <ChevronDown style={{ color: 'rgba(249,115,22,0.65)', width: 18, height: 18, animation: 'floatY 1.6s ease-in-out infinite' }} />
+      <ChevronDown style={{ color: 'rgba(203,60,122,0.65)', width: 18, height: 18, animation: 'floatY 1.6s ease-in-out infinite' }} />
     </div>
   );
 };
@@ -664,10 +664,10 @@ export default function Home() {
                   <Globe className="w-3.5 h-3.5" /><span>{currentLang?.label}</span>
                 </button>
                 {langMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 rounded-xl overflow-hidden shadow-xl z-50" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.25)' }}>
+                  <div className="absolute right-0 mt-2 w-40 rounded-xl overflow-hidden shadow-xl z-50" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.25)' }}>
                     {LANGUAGES.map(lang => (
                       <button key={lang.code} className="w-full text-left px-4 py-2.5 text-sm transition-colors"
-                        style={{ color: lang.code === selectedLang ? PINK : 'rgba(255,255,255,0.75)', background: lang.code === selectedLang ? 'rgba(249,115,22,0.1)' : 'transparent', fontWeight: lang.code === selectedLang ? 600 : 400 }}
+                        style={{ color: lang.code === selectedLang ? PINK : 'rgba(255,255,255,0.75)', background: lang.code === selectedLang ? 'rgba(203,60,122,0.1)' : 'transparent', fontWeight: lang.code === selectedLang ? 600 : 400 }}
                         onClick={() => handleLangChange(lang.code)}>{lang.label}</button>
                     ))}
                   </div>
@@ -687,7 +687,7 @@ export default function Home() {
                       </span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)', color: '#fff' }}>
+                  <DropdownMenuContent align="end" className="w-48" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)', color: '#fff' }}>
                     <DropdownMenuItem asChild>
                       <Link to="/CustomerProfile" className="flex items-center text-white hover:text-white">
                         <LayoutDashboard className="w-4 h-4 mr-2" /> My Profile
@@ -705,7 +705,7 @@ export default function Home() {
                     </DropdownMenuItem>
                     {user.role === 'admin' && (
                       <>
-                        <DropdownMenuSeparator style={{ background: 'rgba(249,115,22,0.2)' }} />
+                        <DropdownMenuSeparator style={{ background: 'rgba(203,60,122,0.2)' }} />
                         <DropdownMenuItem asChild>
                           <Link to="/AdminDashboard" className="flex items-center text-white hover:text-white">
                             <LayoutDashboard className="w-4 h-4 mr-2" /> Admin Dashboard
@@ -713,7 +713,7 @@ export default function Home() {
                         </DropdownMenuItem>
                       </>
                     )}
-                    <DropdownMenuSeparator style={{ background: 'rgba(249,115,22,0.2)' }} />
+                    <DropdownMenuSeparator style={{ background: 'rgba(203,60,122,0.2)' }} />
                     <DropdownMenuItem onClick={() => logout()} className="text-white hover:text-white cursor-pointer">
                       <LogOut className="w-4 h-4 mr-2" /> Logout
                     </DropdownMenuItem>
@@ -747,7 +747,7 @@ export default function Home() {
               ].map(({ label, page }) => (
                 <Link key={page} to={createPageUrl(page)}
                   className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                  style={{ color: page === 'Home' ? PINK : 'rgba(255,255,255,0.8)', background: page === 'Home' ? 'rgba(249,115,22,0.08)' : 'transparent' }}
+                  style={{ color: page === 'Home' ? PINK : 'rgba(255,255,255,0.8)', background: page === 'Home' ? 'rgba(203,60,122,0.08)' : 'transparent' }}
                   onClick={() => setMobileMenuOpen(false)}
                 >{label}</Link>
               ))}
@@ -822,14 +822,14 @@ export default function Home() {
                 <Link to={createPageUrl('Browse')} className="w-full sm:w-auto">
                   <Button size="lg" className="h-12 sm:h-14 px-6 sm:px-10 text-base sm:text-lg rounded-xl text-white border-0 w-full"
                     style={{ background: PINK, transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(249,115,22,0.45)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(203,60,122,0.45)'; }}
                     onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
                     <Search className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> Find Services
                   </Button>
                 </Link>
                 <Link to={createPageUrl('VoiceRequest')} className="w-full sm:w-auto">
                   <Button size="lg" className="h-12 sm:h-14 px-6 sm:px-10 text-base sm:text-lg rounded-xl text-white border-0 w-full"
-                    style={{ background: 'linear-gradient(135deg, #ef4444, #f97316)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+                    style={{ background: 'linear-gradient(135deg, #ef4444, #cb3c7a)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
                     onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)'; e.currentTarget.style.boxShadow = '0 12px 28px rgba(239,68,68,0.4)'; }}
                     onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
                     <Mic className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> Voice Request
@@ -1017,7 +1017,7 @@ export default function Home() {
                 pointerEvents: 'none',
                 zIndex: 1,
                 borderRadius: 2,
-                boxShadow: `0 0 12px rgba(249,115,22,0.4)`,
+                boxShadow: `0 0 12px rgba(203,60,122,0.4)`,
               }}
             />
 
@@ -1072,7 +1072,7 @@ export default function Home() {
       </section>
 
       {/* ── WHY SCP MATTERS ── */}
-      <section style={{ background: '#080500', borderTop: '1px solid rgba(249,115,22,0.12)' }} className="py-14 md:py-20">
+      <section style={{ background: '#080500', borderTop: '1px solid rgba(203,60,122,0.12)' }} className="py-14 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
             <div ref={revealRef} className="reveal-left-hidden" data-reveal-type="left">
@@ -1142,14 +1142,14 @@ export default function Home() {
               return (
                 <div key={i} className="rounded-2xl p-6 tilt-card reveal-hidden"
                   style={{ background: '#0f0900', border: '1px solid rgba(255,255,255,0.07)', position: 'relative', overflow: 'hidden', transition: 'border-color 0.25s ease, box-shadow 0.25s ease' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.38)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(249,115,22,0.1)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(203,60,122,0.38)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(203,60,122,0.1)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.boxShadow = ''; }}
                   onMouseMove={tilt.onMouseMove}
                 >
                   <div className="tilt-shine" style={{ position: 'absolute', inset: 0, opacity: 0, transition: 'opacity 0.2s ease', pointerEvents: 'none', borderRadius: 16 }} />
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                    style={{ background: 'rgba(249,115,22,0.15)', transition: 'box-shadow 0.3s ease' }}
-                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.35)'}
+                    style={{ background: 'rgba(203,60,122,0.15)', transition: 'box-shadow 0.3s ease' }}
+                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 20px rgba(203,60,122,0.35)'}
                     onMouseLeave={e => e.currentTarget.style.boxShadow = ''}>
                     <Icon className="w-6 h-6" style={{ color: PINK }} />
                   </div>
@@ -1181,13 +1181,13 @@ export default function Home() {
                   background: 'rgba(20,11,0,0.65)',
                   backdropFilter: 'blur(18px)',
                   WebkitBackdropFilter: 'blur(18px)',
-                  border: '1px solid rgba(249,115,22,0.18)',
+                  border: '1px solid rgba(203,60,122,0.18)',
                   boxShadow: '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
                   overflow: 'hidden',
                   transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.boxShadow = '0 16px 56px rgba(0,0,0,0.5), 0 0 32px rgba(249,115,22,0.12), inset 0 1px 0 rgba(255,255,255,0.07)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.18)'; e.currentTarget.style.boxShadow = '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)'; }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(203,60,122,0.4)'; e.currentTarget.style.boxShadow = '0 16px 56px rgba(0,0,0,0.5), 0 0 32px rgba(203,60,122,0.12), inset 0 1px 0 rgba(255,255,255,0.07)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(203,60,122,0.18)'; e.currentTarget.style.boxShadow = '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)'; }}
                 onMouseMove={tilt.onMouseMove}
               >
                 <div className="tilt-shine" style={{ position: 'absolute', inset: 0, opacity: 0, transition: 'opacity 0.2s ease', pointerEvents: 'none', borderRadius: 24 }} />
@@ -1197,11 +1197,11 @@ export default function Home() {
                   </div>
                   <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ background: 'rgba(251,191,36,0.1)', color: CYAN }}>{t.sector}</span>
                 </div>
-                <Quote className="w-7 h-7 mb-3" style={{ color: 'rgba(249,115,22,0.4)', animation: 'glassFloat 4s ease-in-out infinite', animationDelay: `${i * 0.8}s` }} />
+                <Quote className="w-7 h-7 mb-3" style={{ color: 'rgba(203,60,122,0.4)', animation: 'glassFloat 4s ease-in-out infinite', animationDelay: `${i * 0.8}s` }} />
                 <p className="text-sm leading-relaxed mb-5" style={{ color: 'rgba(255,255,255,0.68)' }}>"{t.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                    style={{ background: `linear-gradient(135deg, ${PINK}, #ef4444)`, boxShadow: '0 4px 12px rgba(249,115,22,0.4)' }}>
+                    style={{ background: `linear-gradient(135deg, ${PINK}, #ef4444)`, boxShadow: '0 4px 12px rgba(203,60,122,0.4)' }}>
                     {t.avatar}
                   </div>
                   <div>
@@ -1255,7 +1255,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
             <div ref={revealRef} className="reveal-left-hidden" data-reveal-type="left">
-              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5 text-xs font-semibold uppercase tracking-wider" style={{ background: 'rgba(249,115,22,0.12)', color: PINK }}>
+              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5 text-xs font-semibold uppercase tracking-wider" style={{ background: 'rgba(203,60,122,0.12)', color: PINK }}>
                 Professional Growth
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-5 leading-tight" style={{ letterSpacing: '-0.5px' }}>
@@ -1306,16 +1306,16 @@ export default function Home() {
       </section>
 
       {/* ── FINAL CTA ── */}
-      <section style={{ background: 'linear-gradient(135deg, #0d0800 0%, #0f0900 100%)', borderTop: '1px solid rgba(249,115,22,0.2)', position: 'relative', overflow: 'hidden' }} className="py-16 sm:py-24">
+      <section style={{ background: 'linear-gradient(135deg, #0d0800 0%, #0f0900 100%)', borderTop: '1px solid rgba(203,60,122,0.2)', position: 'relative', overflow: 'hidden' }} className="py-16 sm:py-24">
         {/* Radial ambient glow */}
-        <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: '50%', width: 700, height: 700, transform: 'translate(-50%,-50%)', borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.1) 0%, rgba(249,115,22,0.04) 35%, transparent 70%)', pointerEvents: 'none', animation: 'orbPulse 6s ease-in-out infinite' }} />
+        <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: '50%', width: 700, height: 700, transform: 'translate(-50%,-50%)', borderRadius: '50%', background: 'radial-gradient(circle, rgba(203,60,122,0.1) 0%, rgba(203,60,122,0.04) 35%, transparent 70%)', pointerEvents: 'none', animation: 'orbPulse 6s ease-in-out infinite' }} />
         {/* Secondary glow */}
         <div aria-hidden="true" style={{ position: 'absolute', top: '30%', right: '-10%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(251,191,36,0.06) 0%, transparent 70%)', pointerEvents: 'none', animation: 'floatYSlow 9s ease-in-out infinite 2s' }} />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center" style={{ position: 'relative', zIndex: 1 }}>
           <div ref={revealRef} className="reveal-hidden">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 sm:mb-6"
-              style={{ background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)', animation: 'floatY 3.5s ease-in-out infinite', boxShadow: '0 0 40px rgba(249,115,22,0.2)' }}>
+              style={{ background: 'rgba(203,60,122,0.15)', border: '1px solid rgba(203,60,122,0.3)', animation: 'floatY 3.5s ease-in-out infinite', boxShadow: '0 0 40px rgba(203,60,122,0.2)' }}>
               <Handshake className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: PINK }} />
             </div>
             <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-4" style={{ letterSpacing: '-1px' }}>

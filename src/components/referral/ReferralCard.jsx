@@ -17,12 +17,12 @@ export default function ReferralCard({ code, earnings }) {
   const referralUrl = `${window.location.origin}/?ref=${code}`;
 
   return (
-    <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+    <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
       <CardHeader>
         <CardTitle className="text-white">Your Referral Code</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="p-4 rounded-lg" style={{ background: 'rgba(249,115,22,0.1)', border: '2px dashed #f97316' }}>
+        <div className="p-4 rounded-lg" style={{ background: 'rgba(203,60,122,0.1)', border: '2px dashed #cb3c7a' }}>
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>Referral Code</p>
           <div className="flex items-center gap-2 mt-2">
             <p className="text-2xl font-bold text-white font-mono">{code}</p>
@@ -48,9 +48,9 @@ export default function ReferralCard({ code, earnings }) {
           </p>
         </div>
 
-        <div className="pt-4 border-t" style={{ borderColor: 'rgba(249,115,22,0.2)' }}>
+        <div className="pt-4 border-t" style={{ borderColor: 'rgba(203,60,122,0.2)' }}>
           <p className="text-sm text-white mb-1">Total Earnings from Referrals</p>
-          <p className="text-3xl font-bold" style={{ color: '#f97316' }}>${earnings.toFixed(2)}</p>
+          <p className="text-3xl font-bold" style={{ color: '#cb3c7a' }}>${earnings.toFixed(2)}</p>
         </div>
       </CardContent>
     </Card>

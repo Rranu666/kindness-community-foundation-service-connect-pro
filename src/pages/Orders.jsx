@@ -90,7 +90,7 @@ export default function Orders() {
   };
 
   const OrderCard = ({ order }) => (
-    <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }} className="hover:border-pink-400/50 transition-colors">
+    <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }} className="hover:border-pink-400/50 transition-colors">
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
@@ -102,12 +102,12 @@ export default function Orders() {
 
         <div className="space-y-1.5 mb-4 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" style={{ color: '#f97316' }} />
+            <Clock className="w-4 h-4" style={{ color: '#cb3c7a' }} />
             {order.scheduled_date} at {order.scheduled_time}
           </div>
           {order.address && (
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" style={{ color: '#f97316' }} />
+              <MapPin className="w-4 h-4" style={{ color: '#cb3c7a' }} />
               {order.address}
             </div>
           )}
@@ -157,7 +157,7 @@ export default function Orders() {
           </div>
         ) : (
           <Tabs defaultValue="upcoming" className="w-full">
-            <TabsList style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(249,115,22,0.2)' }} className="grid w-full grid-cols-2 border">
+            <TabsList style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(203,60,122,0.2)' }} className="grid w-full grid-cols-2 border">
               <TabsTrigger value="upcoming" className="text-white data-[state=active]:bg-pink-500/20">
                 Upcoming ({upcomingOrders.length})
               </TabsTrigger>
@@ -173,7 +173,7 @@ export default function Orders() {
                 <div className="text-center py-12">
                   <p style={{ color: 'rgba(255,255,255,0.6)' }}>No upcoming bookings</p>
                   <Link to={createPageUrl('Browse')}>
-                    <Button size="sm" style={{ background: '#f97316' }} className="mt-4 text-white">Browse Services</Button>
+                    <Button size="sm" style={{ background: '#cb3c7a' }} className="mt-4 text-white">Browse Services</Button>
                   </Link>
                 </div>
               )}
@@ -194,7 +194,7 @@ export default function Orders() {
 
       {/* Cancel Confirmation Dialog */}
       <Dialog open={!!cancelOrderId} onOpenChange={() => setCancelOrderId(null)}>
-        <DialogContent style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)' }}>
+        <DialogContent style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)' }}>
           <DialogHeader>
             <DialogTitle className="text-white">Cancel Booking?</DialogTitle>
           </DialogHeader>

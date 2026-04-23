@@ -6,7 +6,7 @@ const CYAN = '#fbbf24';
 
 const URGENCY_CONFIG = {
   immediate: { label: 'Immediate', color: '#ef4444' },
-  today: { label: 'Today', color: '#f97316' },
+  today: { label: 'Today', color: '#cb3c7a' },
   this_week: { label: 'This Week', color: '#f59e0b' },
   flexible: { label: 'Flexible', color: '#10b981' },
 };

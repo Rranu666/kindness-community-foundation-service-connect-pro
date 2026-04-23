@@ -34,7 +34,7 @@ import {
 // ─── Theme constants ──────────────────────────────────────────────────────────
 const DARK = '#0f0900';
 const CARD = '#140b00';
-const PINK = '#f97316';
+const PINK = '#cb3c7a';
 const CYAN = '#fbbf24';
 const BORDER = 'rgba(255,255,255,0.08)';
 const MUTED = 'rgba(255,255,255,0.45)';
@@ -127,7 +127,7 @@ function AdminLogin({ onLogin }) {
           <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
           <p className="text-sm mt-1" style={{ color: MUTED }}>Service Connect Pro</p>
         </div>
-        <div className="rounded-2xl p-8" style={{ background: CARD, border: `1px solid rgba(249,115,22,0.2)` }}>
+        <div className="rounded-2xl p-8" style={{ background: CARD, border: `1px solid rgba(203,60,122,0.2)` }}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1">
               <Label className="text-white/70 text-sm">Email</Label>
@@ -359,7 +359,7 @@ function ProvidersSection({ providers, updateProvider, deleteProvider }) {
       </div>
 
       <Dialog open={!!editing} onOpenChange={v => !v && setEditing(null)}>
-        <DialogContent style={{ background: CARD, border: `1px solid rgba(249,115,22,0.3)`, color: '#fff' }}>
+        <DialogContent style={{ background: CARD, border: `1px solid rgba(203,60,122,0.3)`, color: '#fff' }}>
           <DialogHeader><DialogTitle className="text-white">Edit Provider</DialogTitle></DialogHeader>
           <div className="space-y-3">
             {[['business_name','Business Name','text'],['email','Email','email'],['location','Location','text'],['hourly_rate','Hourly Rate','number']].map(([key,label,type]) => (
@@ -811,7 +811,7 @@ function SEOSection() {
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: 'rgba(249,115,22,0.15)', color: PINK }}>{p.page}</span>
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: 'rgba(203,60,122,0.15)', color: PINK }}>{p.page}</span>
                   <span className="text-xs font-mono" style={{ color: MUTED }}>{p.slug}</span>
                 </div>
                 <p className="font-medium text-white text-sm truncate">{p.title}</p>
@@ -827,7 +827,7 @@ function SEOSection() {
       </div>
 
       <Dialog open={!!editing} onOpenChange={v => !v && setEditing(null)}>
-        <DialogContent style={{ background: CARD, border: `1px solid rgba(249,115,22,0.3)`, color: '#fff' }}>
+        <DialogContent style={{ background: CARD, border: `1px solid rgba(203,60,122,0.3)`, color: '#fff' }}>
           <DialogHeader><DialogTitle className="text-white">Edit SEO — {editing?.page}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
@@ -1035,7 +1035,7 @@ function SettingsSection({ user, users, updateUser, onSeedComplete }) {
                 <p className="text-sm font-medium text-white">{u.full_name || '—'}</p>
                 <p className="text-xs" style={{ color: MUTED }}>{u.email}</p>
               </div>
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(249,115,22,0.15)', color: PINK }}>Admin</span>
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(203,60,122,0.15)', color: PINK }}>Admin</span>
             </div>
           ))}
         </div>
@@ -1178,7 +1178,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen flex" style={{ background: DARK, color: '#fff' }}>
       <Toaster position="top-right" />
       <style>{`
-        :root { --kcf-dark: #0f0900; --kcf-card: #140b00; --kcf-pink: #f97316; }
+        :root { --kcf-dark: #0f0900; --kcf-card: #140b00; --kcf-pink: #cb3c7a; }
         * { box-sizing: border-box; }
         select option { background: #140b00; color: #fff; }
       `}</style>
@@ -1213,7 +1213,7 @@ export default function AdminDashboard() {
                 return (
                   <button key={id} onClick={() => { setSection(id); setSidebarOpen(false); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-left transition-all"
-                    style={{ background: active ? `rgba(249,115,22,0.15)` : 'transparent', color: active ? PINK : 'rgba(255,255,255,0.6)' }}>
+                    style={{ background: active ? `rgba(203,60,122,0.15)` : 'transparent', color: active ? PINK : 'rgba(255,255,255,0.6)' }}>
                     <Icon className="w-4 h-4 flex-shrink-0" />
                     <span className="text-sm font-medium flex-1">{label}</span>
                     {badge > 0 && (

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Badge } from '@/components/ui/badge';
 
-const PINK = '#f97316';
+const PINK = '#cb3c7a';
 const CYAN = '#fbbf24';
 
 export default function ProviderMatchList({ providers, selectedProviders, onToggle, interpretation }) {
@@ -30,7 +30,7 @@ export default function ProviderMatchList({ providers, selectedProviders, onTogg
               key={provider.id}
               className="rounded-2xl p-4 cursor-pointer transition-all duration-200"
               style={{
-                background: isSelected ? 'rgba(249,115,22,0.1)' : '#140b00',
+                background: isSelected ? 'rgba(203,60,122,0.1)' : '#140b00',
                 border: `1px solid ${isSelected ? PINK : 'rgba(255,255,255,0.08)'}`,
               }}
               onClick={() => onToggle(provider.id)}
@@ -88,7 +88,7 @@ export default function ProviderMatchList({ providers, selectedProviders, onTogg
                   {provider.ai_specializations?.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {provider.ai_specializations.slice(0, 2).map(s => (
-                        <span key={s} className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'rgba(249,115,22,0.1)', color: PINK }}>{s}</span>
+                        <span key={s} className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'rgba(203,60,122,0.1)', color: PINK }}>{s}</span>
                       ))}
                     </div>
                   )}

@@ -43,9 +43,9 @@ export default function Support() {
 
         {/* Contact Options */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-8">
-          <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+          <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
             <CardContent className="pt-6 text-center">
-              <Mail className="w-8 h-8 mx-auto mb-3" style={{ color: '#f97316' }} />
+              <Mail className="w-8 h-8 mx-auto mb-3" style={{ color: '#cb3c7a' }} />
               <h3 className="text-white font-semibold mb-2">Email Support</h3>
               <p style={{ color: 'rgba(255,255,255,0.6)' }} className="text-sm mb-4">
                 contact@kindnesscommunityfoundation.com
@@ -58,9 +58,9 @@ export default function Support() {
             </CardContent>
           </Card>
 
-          <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+          <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
             <CardContent className="pt-6 text-center">
-              <Phone className="w-8 h-8 mx-auto mb-3" style={{ color: '#f97316' }} />
+              <Phone className="w-8 h-8 mx-auto mb-3" style={{ color: '#cb3c7a' }} />
               <h3 className="text-white font-semibold mb-2">Call Us</h3>
               <p style={{ color: 'rgba(255,255,255,0.6)' }} className="text-sm mb-4">
                 +1 (555) 123-4567
@@ -71,14 +71,14 @@ export default function Support() {
             </CardContent>
           </Card>
 
-          <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+          <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
             <CardContent className="pt-6 text-center">
-              <MessageCircle className="w-8 h-8 mx-auto mb-3" style={{ color: '#f97316' }} />
+              <MessageCircle className="w-8 h-8 mx-auto mb-3" style={{ color: '#cb3c7a' }} />
               <h3 className="text-white font-semibold mb-2">Live Chat</h3>
               <p style={{ color: 'rgba(255,255,255,0.6)' }} className="text-sm mb-4">
                 Available Mon-Fri 9am-5pm
               </p>
-              <Button className="text-white" style={{ background: '#f97316' }}>
+              <Button className="text-white" style={{ background: '#cb3c7a' }}>
                 Start Chat
               </Button>
             </CardContent>
@@ -87,7 +87,7 @@ export default function Support() {
 
         {/* Help Sections */}
         <Tabs defaultValue="faq" className="w-full">
-          <TabsList className="grid w-full grid-cols-2" style={{ background: 'rgba(249,115,22,0.1)' }}>
+          <TabsList className="grid w-full grid-cols-2" style={{ background: 'rgba(203,60,122,0.1)' }}>
             <TabsTrigger value="faq" className="text-white/70 data-[state=active]:text-white data-[state=active]:bg-pink-500/20 hover:bg-white/10 hover:text-white">
               <HelpCircle className="w-4 h-4 mr-2" />
               FAQs
@@ -101,7 +101,7 @@ export default function Support() {
           <TabsContent value="faq" className="mt-6">
             <div className="space-y-3">
               {faqs.map((faq, idx) => (
-                <Card key={idx} style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+                <Card key={idx} style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
                   <CardContent className="pt-6">
                     <h3 className="text-white font-semibold mb-2">{faq.question}</h3>
                     <p style={{ color: 'rgba(255,255,255,0.6)' }} className="text-sm">
@@ -114,7 +114,7 @@ export default function Support() {
           </TabsContent>
 
           <TabsContent value="chat" className="mt-6">
-            <Card style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+            <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
               <CardHeader>
                 <CardTitle className="text-white">AI Support Assistant</CardTitle>
                 <p style={{ color: 'rgba(255,255,255,0.6)' }} className="text-sm mt-2">
@@ -136,8 +136,8 @@ export default function Support() {
                           onClick={() => setSelectedContext(option.value)}
                           className="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                           style={{
-                            background: selectedContext === option.value ? '#f97316' : 'rgba(249,115,22,0.1)',
-                            color: selectedContext === option.value ? '#fff' : '#f97316'
+                            background: selectedContext === option.value ? '#cb3c7a' : 'rgba(203,60,122,0.1)',
+                            color: selectedContext === option.value ? '#fff' : '#cb3c7a'
                           }}
                         >
                           {option.label}

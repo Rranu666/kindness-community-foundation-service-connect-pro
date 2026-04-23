@@ -17,7 +17,7 @@ import BookingModal from '@/components/booking/BookingModal';
 import { toast } from 'sonner';
 import { MessageCircle } from 'lucide-react';
 
-const PINK = '#f97316';
+const PINK = '#cb3c7a';
 
 export default function ProviderProfile() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -138,12 +138,12 @@ export default function ProviderProfile() {
 
       {/* Profile Card */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-16 relative z-10 pb-16">
-        <div className="rounded-2xl shadow-xl overflow-hidden mb-6" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}>
+        <div className="rounded-2xl shadow-xl overflow-hidden mb-6" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
           <div className="p-6 md:p-8">
             <div className="flex flex-col md:flex-row gap-6">
               {/* Avatar */}
               <div className="shrink-0">
-                <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl border-2 overflow-hidden" style={{ borderColor: PINK, background: 'linear-gradient(135deg, #f97316, #ef4444)' }}>
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl border-2 overflow-hidden" style={{ borderColor: PINK, background: 'linear-gradient(135deg, #cb3c7a, #ef4444)' }}>
                   {(provider.avatar_url || provider.profile_image) ? (
                     <img src={provider.avatar_url || provider.profile_image} alt={provider.business_name} className="w-full h-full object-cover" />
                   ) : (
@@ -197,7 +197,7 @@ export default function ProviderProfile() {
                 </div>
 
                 {category && (
-                  <Badge variant="outline" style={{ borderColor: 'rgba(249,115,22,0.3)', color: PINK }}>
+                  <Badge variant="outline" style={{ borderColor: 'rgba(203,60,122,0.3)', color: PINK }}>
                     {category.name}
                   </Badge>
                 )}
@@ -232,7 +232,7 @@ export default function ProviderProfile() {
 
         {/* Tabs */}
         <Tabs defaultValue="services">
-          <TabsList style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }} className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-0.5 p-1">
+          <TabsList style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }} className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-0.5 p-1">
             <TabsTrigger value="services" className="data-[state=active]:text-white data-[state=active]:bg-white/15 hover:bg-white/10 hover:text-white" style={{ color: 'rgba(255,255,255,0.5)' }}>
               Services ({services.length})
             </TabsTrigger>
@@ -259,7 +259,7 @@ export default function ProviderProfile() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl p-10 text-center" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.1)' }}>
+              <div className="rounded-xl p-10 text-center" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.1)' }}>
                 <p style={{ color: 'rgba(255,255,255,0.4)' }}>No services listed yet</p>
               </div>
             )}
@@ -273,7 +273,7 @@ export default function ProviderProfile() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl p-10 text-center" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.1)' }}>
+              <div className="rounded-xl p-10 text-center" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.1)' }}>
                 <p style={{ color: 'rgba(255,255,255,0.4)' }}>No reviews yet</p>
               </div>
             )}
@@ -293,7 +293,7 @@ export default function ProviderProfile() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-xl p-10 text-center" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.1)' }}>
+                <div className="rounded-xl p-10 text-center" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.1)' }}>
                   <p style={{ color: 'rgba(255,255,255,0.4)' }}>No portfolio images yet</p>
                 </div>
               );
@@ -301,7 +301,7 @@ export default function ProviderProfile() {
           </TabsContent>
 
           <TabsContent value="about" className="mt-6">
-            <div className="rounded-2xl p-6" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.15)' }}>
+            <div className="rounded-2xl p-6" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.15)' }}>
               <h3 className="font-semibold text-white mb-4">About {provider.business_name}</h3>
               <p className="mb-6" style={{ color: 'rgba(255,255,255,0.6)' }}>{provider.description || 'No description provided.'}</p>
 
@@ -319,7 +319,7 @@ export default function ProviderProfile() {
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {avail.map((day) => (
-                        <Badge key={day} variant="outline" style={{ borderColor: 'rgba(249,115,22,0.3)', color: 'rgba(255,255,255,0.7)' }}>{day}</Badge>
+                        <Badge key={day} variant="outline" style={{ borderColor: 'rgba(203,60,122,0.3)', color: 'rgba(255,255,255,0.7)' }}>{day}</Badge>
                       ))}
                     </div>
                   </div>

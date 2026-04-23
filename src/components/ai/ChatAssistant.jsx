@@ -72,7 +72,7 @@ export default function ChatAssistant({ context = 'general_help' }) {
 
   return (
     <div
-      style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.2)' }}
+      style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}
       className="rounded-lg flex flex-col h-96"
     >
       {/* Messages */}
@@ -82,7 +82,7 @@ export default function ChatAssistant({ context = 'general_help' }) {
             <div
               className="max-w-xs rounded-lg px-4 py-2"
               style={{
-                background: message.role === 'user' ? '#f97316' : 'rgba(255,255,255,0.1)',
+                background: message.role === 'user' ? '#cb3c7a' : 'rgba(255,255,255,0.1)',
                 color: '#fff'
               }}
             >
@@ -120,20 +120,20 @@ export default function ChatAssistant({ context = 'general_help' }) {
       </div>
 
       {/* Input */}
-      <div className="border-t p-3" style={{ borderColor: 'rgba(249,115,22,0.2)' }}>
+      <div className="border-t p-3" style={{ borderColor: 'rgba(203,60,122,0.2)' }}>
         <div className="flex gap-2">
           <Input
             placeholder="Ask me anything..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-            style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
+            style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
             className="text-white"
             disabled={loading}
           />
           <Button
             size="icon"
-            style={{ background: '#f97316' }}
+            style={{ background: '#cb3c7a' }}
             className="text-white hover:opacity-90"
             onClick={handleSendMessage}
             disabled={loading || !input.trim()}

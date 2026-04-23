@@ -15,7 +15,7 @@ import ReviewCard from '@/components/marketplace/ReviewCard';
 import BookingModal from '@/components/booking/BookingModal';
 import { toast } from 'sonner';
 
-const PINK = '#f97316';
+const PINK = '#cb3c7a';
 
 const priceTypeLabels = {
   fixed: 'Fixed Price',
@@ -129,7 +129,7 @@ export default function ServiceDetails() {
   return (
     <div className="min-h-screen" style={{ background: '#0f0900' }}>
       {/* Mobile sticky Book Now bar */}
-      <div className="lg:hidden sticky top-16 z-40 px-4 py-2" style={{ background: 'rgba(15,9,0,0.95)', borderBottom: '1px solid rgba(249,115,22,0.2)', backdropFilter: 'blur(12px)' }}>
+      <div className="lg:hidden sticky top-16 z-40 px-4 py-2" style={{ background: 'rgba(15,9,0,0.95)', borderBottom: '1px solid rgba(203,60,122,0.2)', backdropFilter: 'blur(12px)' }}>
         <div className="flex items-center justify-between gap-3 max-w-5xl mx-auto">
           <div className="flex items-baseline gap-1">
             <span className="text-xl font-bold text-white">${service?.price?.toLocaleString()}</span>
@@ -157,7 +157,7 @@ export default function ServiceDetails() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Image Gallery */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.15)' }}>
+            <div className="rounded-2xl overflow-hidden" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.15)' }}>
               {images.length > 0 ? (
                 <>
                   <div className="aspect-video">
@@ -179,8 +179,8 @@ export default function ServiceDetails() {
                   )}
                 </>
               ) : (
-                <div className="aspect-video flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.1) 0%, rgba(239,68,68,0.1) 100%)' }}>
-                  <ImageIcon className="w-16 h-16" style={{ color: 'rgba(249,115,22,0.3)' }} />
+                <div className="aspect-video flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(203,60,122,0.1) 0%, rgba(239,68,68,0.1) 100%)' }}>
+                  <ImageIcon className="w-16 h-16" style={{ color: 'rgba(203,60,122,0.3)' }} />
                 </div>
               )}
             </div>
@@ -204,7 +204,7 @@ export default function ServiceDetails() {
               </div>
               <div className="flex flex-wrap gap-4 text-sm mb-4" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 {service.price_type && (
-                  <Badge variant="outline" style={{ borderColor: 'rgba(249,115,22,0.3)', color: PINK }}>
+                  <Badge variant="outline" style={{ borderColor: 'rgba(203,60,122,0.3)', color: PINK }}>
                     {priceTypeLabels[service.price_type] || service.price_type}
                   </Badge>
                 )}
@@ -228,8 +228,8 @@ export default function ServiceDetails() {
 
             {/* Provider Info */}
             {provider && (
-              <div className="rounded-2xl p-5 flex items-center gap-4" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.15)' }}>
-                <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(135deg, #f97316, #ef4444)' }}>
+              <div className="rounded-2xl p-5 flex items-center gap-4" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.15)' }}>
+                <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(135deg, #cb3c7a, #ef4444)' }}>
                   {provider.profile_image ? (
                     <img src={provider.profile_image} alt={provider.business_name} className="w-full h-full object-cover" />
                   ) : (
@@ -258,7 +258,7 @@ export default function ServiceDetails() {
                   </div>
                 </div>
                 <Link to={createPageUrl(`ProviderProfile?id=${provider.id}`)}>
-                  <Button variant="outline" size="sm" className="text-white" style={{ borderColor: 'rgba(249,115,22,0.3)', background: 'transparent' }}>
+                  <Button variant="outline" size="sm" className="text-white" style={{ borderColor: 'rgba(203,60,122,0.3)', background: 'transparent' }}>
                     View Profile
                   </Button>
                 </Link>
@@ -281,7 +281,7 @@ export default function ServiceDetails() {
             {service.faqs?.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-white mb-4">Frequently Asked Questions</h3>
-                <div className="rounded-2xl p-5 space-y-4" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.15)' }}>
+                <div className="rounded-2xl p-5 space-y-4" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.15)' }}>
                   {service.faqs.map((faq, i) => (
                     <FAQItem key={i} faq={faq} />
                   ))}
@@ -292,7 +292,7 @@ export default function ServiceDetails() {
 
           {/* Booking Sidebar */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 rounded-2xl p-6 space-y-5" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.25)' }}>
+            <div className="sticky top-24 rounded-2xl p-6 space-y-5" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.25)' }}>
               {/* Price */}
               <div>
                 <div className="flex items-baseline gap-2 mb-1">
@@ -345,7 +345,7 @@ export default function ServiceDetails() {
               <Button
                 variant="outline"
                 className="w-full text-white"
-                style={{ borderColor: 'rgba(249,115,22,0.3)', background: 'transparent' }}
+                style={{ borderColor: 'rgba(203,60,122,0.3)', background: 'transparent' }}
                 onClick={handleShare}
               >
                 <Share2 className="w-4 h-4 mr-2" />

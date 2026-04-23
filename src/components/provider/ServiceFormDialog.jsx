@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Camera, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
-const S = { background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' };
+const S = { background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' };
 
 export default function ServiceFormDialog({ open, onClose, onSave, service, providerId }) {
   const [form, setForm] = useState({
@@ -84,7 +84,7 @@ export default function ServiceFormDialog({ open, onClose, onSave, service, prov
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent style={{ background: '#140b00', borderColor: 'rgba(249,115,22,0.3)' }}
+      <DialogContent style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.3)' }}
         className="border max-h-[90vh] overflow-y-auto max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-white">{service ? 'Edit Service' : 'Add New Service'}</DialogTitle>
@@ -162,10 +162,10 @@ export default function ServiceFormDialog({ open, onClose, onSave, service, prov
               ))}
               <label className="cursor-pointer">
                 <div className="h-20 rounded-lg border-dashed border-2 flex flex-col items-center justify-center"
-                  style={{ borderColor: 'rgba(249,115,22,0.3)', background: 'rgba(255,255,255,0.03)' }}>
+                  style={{ borderColor: 'rgba(203,60,122,0.3)', background: 'rgba(255,255,255,0.03)' }}>
                   {uploadingImage
-                    ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#f97316' }} />
-                    : <Camera className="w-5 h-5" style={{ color: '#f97316' }} />}
+                    ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#cb3c7a' }} />
+                    : <Camera className="w-5 h-5" style={{ color: '#cb3c7a' }} />}
                   <span className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Add</span>
                 </div>
                 <input type="file" accept="image/*" className="hidden"
@@ -183,7 +183,7 @@ export default function ServiceFormDialog({ open, onClose, onSave, service, prov
                   style={{ background: 'rgba(255,255,255,0.05)' }}>
                   <span className="text-white text-sm">{addon.name}</span>
                   <div className="flex items-center gap-2">
-                    <span style={{ color: '#f97316' }} className="text-sm font-medium">+${addon.price}</span>
+                    <span style={{ color: '#cb3c7a' }} className="text-sm font-medium">+${addon.price}</span>
                     <button onClick={() => removeAddon(i)} className="text-red-400 hover:text-red-300">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -199,7 +199,7 @@ export default function ServiceFormDialog({ open, onClose, onSave, service, prov
                 onChange={e => setNewAddon({ ...newAddon, price: e.target.value })}
                 style={S} className="w-20 text-sm" />
               <Button type="button" size="sm" onClick={addAddon}
-                style={{ background: 'rgba(249,115,22,0.2)', color: '#f97316' }}>
+                style={{ background: 'rgba(203,60,122,0.2)', color: '#cb3c7a' }}>
                 <Plus className="w-4 h-4" />
               </Button>
             </div>
@@ -207,7 +207,7 @@ export default function ServiceFormDialog({ open, onClose, onSave, service, prov
 
           <div className="flex gap-3 pt-2">
             <Button variant="outline" className="flex-1 text-white border-white/20" onClick={onClose}>Cancel</Button>
-            <Button className="flex-1 text-white" style={{ background: '#f97316' }} onClick={handleSave}>
+            <Button className="flex-1 text-white" style={{ background: '#cb3c7a' }} onClick={handleSave}>
               {service ? 'Update Service' : 'Create Service'}
             </Button>
           </div>

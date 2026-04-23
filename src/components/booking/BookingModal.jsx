@@ -224,12 +224,12 @@ export default function BookingModal({ open, onClose, service, provider }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ background: '#140b00', border: '1px solid rgba(249,115,22,0.3)' }}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)' }}>
         <DialogHeader>
           <DialogTitle className="text-xl text-white">Book Service</DialogTitle>
         </DialogHeader>
 
-        <div style={{ background: 'rgba(249,115,22,0.1)', borderColor: 'rgba(249,115,22,0.2)' }} className="rounded-xl p-4 mb-2 border">
+        <div style={{ background: 'rgba(203,60,122,0.1)', borderColor: 'rgba(203,60,122,0.2)' }} className="rounded-xl p-4 mb-2 border">
           <h3 className="font-semibold text-white">{service?.name}</h3>
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{provider?.business_name} · ${service?.price}</p>
         </div>
@@ -242,7 +242,7 @@ export default function BookingModal({ open, onClose, service, provider }) {
               <Input required value={formData.customer_name}
                 onChange={(e) => setFormData({...formData, customer_name: e.target.value})}
                 placeholder="John Doe"
-                style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
+                style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
                 className="placeholder:text-gray-500" />
             </div>
             <div>
@@ -250,7 +250,7 @@ export default function BookingModal({ open, onClose, service, provider }) {
               <Input type="email" required value={formData.customer_email}
                 onChange={(e) => setFormData({...formData, customer_email: e.target.value})}
                 placeholder="john@example.com"
-                style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
+                style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
                 className="placeholder:text-gray-500" />
             </div>
             <div>
@@ -258,7 +258,7 @@ export default function BookingModal({ open, onClose, service, provider }) {
               <Input value={formData.customer_phone}
                 onChange={(e) => setFormData({...formData, customer_phone: e.target.value})}
                 placeholder="+1 234 567 890"
-                style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
+                style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
                 className="placeholder:text-gray-500" />
             </div>
           </div>
@@ -270,7 +270,7 @@ export default function BookingModal({ open, onClose, service, provider }) {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal text-white"
-                    style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: date ? '#fff' : 'rgba(255,255,255,0.4)' }}>
+                    style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: date ? '#fff' : 'rgba(255,255,255,0.4)' }}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {date ? format(date, 'PPP') : 'Pick a date'}
                   </Button>
@@ -285,7 +285,7 @@ export default function BookingModal({ open, onClose, service, provider }) {
               <Label className="text-white/70 text-sm">Time *</Label>
               <Select value={formData.scheduled_time}
                 onValueChange={(value) => setFormData({...formData, scheduled_time: value})}>
-                <SelectTrigger style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}>
+                <SelectTrigger style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}>
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
                 <SelectContent>
@@ -304,7 +304,7 @@ export default function BookingModal({ open, onClose, service, provider }) {
               onChange={(e) => setFormData({...formData, address: e.target.value})}
               placeholder="Enter your complete address"
               rows={2}
-              style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
+              style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
               className="placeholder:text-gray-500" />
           </div>
 
@@ -315,7 +315,7 @@ export default function BookingModal({ open, onClose, service, provider }) {
               onChange={(e) => setFormData({...formData, notes: e.target.value})}
               placeholder="Any special requirements?"
               rows={2}
-              style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }}
+              style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
               className="placeholder:text-gray-500" />
           </div>
 
@@ -337,10 +337,10 @@ export default function BookingModal({ open, onClose, service, provider }) {
                     onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                     placeholder="Enter promo code"
                     className="pl-9 placeholder:text-gray-500"
-                    style={{ background: '#0f0900', borderColor: 'rgba(249,115,22,0.2)', color: '#fff' }} />
+                    style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }} />
                 </div>
                 <Button type="button" onClick={applyPromoCode} disabled={promoLoading || !promoCode.trim()}
-                  style={{ background: 'rgba(249,115,22,0.2)', color: '#f97316', border: '1px solid rgba(249,115,22,0.3)' }}
+                  style={{ background: 'rgba(203,60,122,0.2)', color: '#cb3c7a', border: '1px solid rgba(203,60,122,0.3)' }}
                   className="hover:opacity-90 shrink-0">
                   {promoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
                 </Button>
@@ -357,9 +357,9 @@ export default function BookingModal({ open, onClose, service, provider }) {
                   onClick={() => setPaymentMethod(id)}
                   className="flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all text-sm font-medium"
                   style={{
-                    background: paymentMethod === id ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
-                    borderColor: paymentMethod === id ? '#f97316' : 'rgba(255,255,255,0.1)',
-                    color: paymentMethod === id ? '#f97316' : 'rgba(255,255,255,0.6)'
+                    background: paymentMethod === id ? 'rgba(203,60,122,0.15)' : 'rgba(255,255,255,0.04)',
+                    borderColor: paymentMethod === id ? '#cb3c7a' : 'rgba(255,255,255,0.1)',
+                    color: paymentMethod === id ? '#cb3c7a' : 'rgba(255,255,255,0.6)'
                   }}>
                   <Icon className="w-5 h-5" />
                   <span className="text-xs">{label}</span>
@@ -401,14 +401,14 @@ export default function BookingModal({ open, onClose, service, provider }) {
             )}
             <div className="flex justify-between pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
               <span className="font-semibold text-white">Total</span>
-              <span className="font-bold text-lg" style={{ color: '#f97316' }}>${totalAmount.toFixed(2)}</span>
+              <span className="font-bold text-lg" style={{ color: '#cb3c7a' }}>${totalAmount.toFixed(2)}</span>
             </div>
             <p className="text-xs text-center pt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              Paying via <span className="capitalize font-medium" style={{ color: '#f97316' }}>{paymentMethod}</span>
+              Paying via <span className="capitalize font-medium" style={{ color: '#cb3c7a' }}>{paymentMethod}</span>
             </p>
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full h-12 text-white" style={{ background: '#f97316' }}>
+          <Button type="submit" disabled={loading} className="w-full h-12 text-white" style={{ background: '#cb3c7a' }}>
             {loading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
             ) : (
