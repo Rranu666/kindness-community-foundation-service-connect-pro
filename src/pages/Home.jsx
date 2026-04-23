@@ -104,20 +104,20 @@ function useAnimationStyles() {
         to { transform: rotate(360deg); }
       }
       @keyframes fadeSlideUp {
-        from { opacity: 0; transform: translateY(32px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { transform: translateY(22px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
       }
       @keyframes fadeSlideLeft {
-        from { opacity: 0; transform: translateX(-32px); }
-        to { opacity: 1; transform: translateX(0); }
+        from { transform: translateX(-22px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
       }
       @keyframes fadeSlideRight {
-        from { opacity: 0; transform: translateX(32px); }
-        to { opacity: 1; transform: translateX(0); }
+        from { transform: translateX(22px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
       }
       @keyframes scaleIn {
-        from { opacity: 0; transform: scale(0.86); }
-        to { opacity: 1; transform: scale(1); }
+        from { transform: scale(0.92); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
       }
       @keyframes heroBadgePop {
         0% { opacity: 0; transform: scale(0.6); }
@@ -157,12 +157,18 @@ function useAnimationStyles() {
         50% { transform: scale(1.15); opacity: 1; }
       }
 
-      .reveal-hidden { opacity: 0; transform: translateY(28px); transition: none; }
-      .reveal-left-hidden { opacity: 0; transform: translateX(-28px); transition: none; }
-      .reveal-scale-hidden { opacity: 0; transform: scale(0.88); transition: none; }
-      .reveal-visible { animation: fadeSlideUp 0.7s cubic-bezier(0.22,1,0.36,1) forwards; }
-      .reveal-left-visible { animation: fadeSlideLeft 0.7s cubic-bezier(0.22,1,0.36,1) forwards; }
-      .reveal-scale-visible { animation: scaleIn 0.65s cubic-bezier(0.22,1,0.36,1) forwards; }
+      /* Reveal: content is always visible (progressive enhancement).
+         Observer adds *-visible to trigger a subtle entrance animation. */
+      .reveal-hidden { opacity: 1; }
+      .reveal-left-hidden { opacity: 1; }
+      .reveal-scale-hidden { opacity: 1; }
+      /* Slide-only animations (no opacity flip) so content never flashes invisible */
+      @keyframes slideUp { from { transform: translateY(20px); } to { transform: translateY(0); } }
+      @keyframes slideLeft { from { transform: translateX(-20px); } to { transform: translateX(0); } }
+      @keyframes slideScale { from { transform: scale(0.95); } to { transform: scale(1); } }
+      .reveal-visible { animation: slideUp 0.65s cubic-bezier(0.22,1,0.36,1) forwards; }
+      .reveal-left-visible { animation: slideLeft 0.65s cubic-bezier(0.22,1,0.36,1) forwards; }
+      .reveal-scale-visible { animation: slideScale 0.6s cubic-bezier(0.22,1,0.36,1) forwards; }
 
       .tilt-card { transform-style: preserve-3d; will-change: transform; }
       .tilt-card:hover .tilt-shine { opacity: 1 !important; }
