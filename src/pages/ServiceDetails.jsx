@@ -154,7 +154,7 @@ export default function ServiceDetails() {
             {provider && (
               <div style={{ background: L.bg2, border: `1px solid ${L.border}`, borderRadius: 16, padding: '20px', display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-slate-200">
-                  {provider.profile_image ? <img src={provider.profile_image} alt={provider.business_name} className="w-full h-full object-cover" /> :
+                  {(provider.profile_image || provider.avatar_url) ? <img src={provider.profile_image || provider.avatar_url} alt={provider.business_name} className="w-full h-full object-cover" /> :
                     <div className="w-full h-full flex items-center justify-center font-bold text-xl text-slate-600">{provider.business_name?.charAt(0)}</div>}
                 </div>
                 <div className="flex-1">

@@ -80,8 +80,8 @@ export default function ProviderProfile() {
     <div style={{ minHeight: '100vh', background: L.bg }}>
       {/* Cover */}
       <div className="relative h-56 md:h-64">
-        {provider.cover_image ? (
-          <img src={provider.cover_image} alt="" className="w-full h-full object-cover" />
+        {(provider.cover_image || provider.avatar_url) ? (
+          <img src={provider.cover_image || provider.avatar_url} alt="" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full" style={{ background: L.bg3 }} />
         )}
@@ -101,8 +101,8 @@ export default function ProviderProfile() {
             <div className="flex flex-col md:flex-row gap-6">
               <div className="shrink-0">
                 <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl border-2 border-slate-200 overflow-hidden bg-slate-100">
-                  {provider.profile_image ? (
-                    <img src={provider.profile_image} alt={provider.business_name} className="w-full h-full object-cover" />
+                  {(provider.profile_image || provider.avatar_url) ? (
+                    <img src={provider.profile_image || provider.avatar_url} alt={provider.business_name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <span className="text-3xl font-bold text-slate-600">{provider.business_name?.charAt(0)}</span>

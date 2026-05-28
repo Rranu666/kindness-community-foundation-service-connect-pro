@@ -16,15 +16,15 @@ export default function ProviderCard({ provider, onFavoriteChange = null }) {
 
       {/* Cover image */}
       <div style={{ position: 'relative', height: 140, background: L.bg3 }}>
-        {provider.cover_image && (
-          <img src={provider.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        {(provider.cover_image || provider.avatar_url) && (
+          <img src={provider.cover_image || provider.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         )}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 60%)' }} />
 
         {/* Avatar */}
         <div style={{ position: 'absolute', bottom: -36, left: 20, width: 72, height: 72, borderRadius: 16, overflow: 'hidden', border: '3px solid #ffffff', flexShrink: 0, background: L.bg3 }}>
-          {provider.profile_image ? (
-            <img src={provider.profile_image} alt={provider.business_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          {(provider.profile_image || provider.avatar_url) ? (
+            <img src={provider.profile_image || provider.avatar_url} alt={provider.business_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <div style={{ width: '100%', height: '100%', background: L.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff' }}>
               {provider.business_name?.charAt(0)}
