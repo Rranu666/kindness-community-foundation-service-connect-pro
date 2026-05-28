@@ -171,7 +171,7 @@ export default function ProviderProfile() {
 
           <TabsContent value="portfolio" className="mt-6">
             {(() => {
-              const allImages = [...(provider.certifications || []).filter(c => c.startsWith('http')), ...services.flatMap(s => s.images || []).filter(Boolean)];
+              const allImages = [...(Array.isArray(provider.certifications) ? provider.certifications : []).filter(c => c.startsWith('http')), ...(Array.isArray(provider.portfolio_urls) ? provider.portfolio_urls : []).filter(Boolean), ...services.flatMap(s => Array.isArray(s.images) ? s.images : []).filter(Boolean)];
               return allImages.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {allImages.map((url, i) => <div key={i} className="aspect-square rounded-xl overflow-hidden"><img src={url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" /></div>)}
@@ -188,7 +188,7 @@ export default function ProviderProfile() {
             <div style={{ background: '#fff', border: `1px solid ${L.border}`, borderRadius: 20, padding: '24px' }}>
               <h3 style={{ fontWeight: 700, color: L.text, marginBottom: 16 }}>About {provider.business_name}</h3>
               <p style={{ color: L.text2, marginBottom: 24, lineHeight: 1.7, fontWeight: 300 }}>{provider.description || 'No description provided.'}</p>
-              {provider.availability?.length > 0 && (
+              {Array.isArray(provider.availability) && provider.availability.length > 0 && (
                 <div className="mb-6">
                   <h4 style={{ fontWeight: 600, color: L.text, marginBottom: 12, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Calendar className="w-4 h-4" style={{ color: L.accent }} /> Availability
@@ -198,7 +198,7 @@ export default function ProviderProfile() {
                   </div>
                 </div>
               )}
-              {provider.certifications?.length > 0 && (
+              {Array.isArray(provider.certifications) && provider.certifications.length > 0 && (
                 <div>
                   <h4 style={{ fontWeight: 600, color: L.text, marginBottom: 12, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <BadgeCheck className="w-4 h-4" style={{ color: L.green }} /> Certifications
