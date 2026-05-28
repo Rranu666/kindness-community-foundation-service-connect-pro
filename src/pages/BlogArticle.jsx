@@ -98,7 +98,8 @@ export default function BlogArticle() {
       <SeoHelmet
         title={post.title + ' | Service Connect Pro Blog'}
         description={post.excerpt}
-        canonical={`https://serviceconnectpro.com/BlogArticle?id=${post.id}`}
+        canonical={`https://serviceconnectpro.ai/blog/${post.slug || post.id}`}
+        image={post.featured_image}
         schema={breadcrumbs}
       />
 

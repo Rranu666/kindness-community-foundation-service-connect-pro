@@ -6,6 +6,11 @@
 [functions]
   node_bundler = "esbuild"
 
+# Edge function: serve OG meta tags to social/link-preview crawlers for blog posts
+[[edge_functions]]
+  path = "/blog/*"
+  function = "og-preview"
+
 # SPA fallback — all routes serve index.html so React Router handles them
 [[redirects]]
   from = "/*"
