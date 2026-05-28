@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db, auth, invokeLLM, uploadFile } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Plus, Trash2, Edit, Bell, Star, Image, Tag } from 'lucide-react';
@@ -19,17 +19,17 @@ import { toast } from 'sonner';
 // ── Coupons & Promotions ──
 function CouponsSection() {
   const qc = useQueryClient();
-  const { data: promos = [] } = useQuery({ queryKey: ['promotions'], queryFn: () => base44.entities.Promotion.list('-created_date', 100) });
+  const { data: promos = [] } = useQuery({ queryKey: ['promotions'], queryFn: () => db.Promotion.list('-created_date', 100) });
   const createPromo = useMutation({
-    mutationFn: d => base44.entities.Promotion.create(d),
+    mutationFn: d => db.Promotion.create(d),
     onSuccess: () => { qc.invalidateQueries(['promotions']); toast.success('Promotion created'); setDialog(false); }
   });
   const updatePromo = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Promotion.update(id, data),
+    mutationFn: ({ id, data }) => db.Promotion.update(id, data),
     onSuccess: () => { qc.invalidateQueries(['promotions']); toast.success('Promotion updated'); setDialog(false); setEditing(null); }
   });
   const deletePromo = useMutation({
-    mutationFn: id => base44.entities.Promotion.delete(id),
+    mutationFn: id => db.Promotion.delete(id),
     onSuccess: () => { qc.invalidateQueries(['promotions']); toast.success('Promotion deleted'); }
   });
 
@@ -157,7 +157,7 @@ function PushNotificationsSection({ users, providers }) {
       sent_at: new Date().toISOString()
     }));
 
-    await Promise.all(notifications.map(n => base44.entities.Notification.create(n)));
+    await Promise.all(notifications.map(n => db.Notification.create(n)));
     setSending(false);
     toast.success(`Notification sent to ${notifications.length} recipients`);
     setForm({ title: '', message: '', audience: 'all_customers', type: 'promotion_alert' });
@@ -214,7 +214,7 @@ function PushNotificationsSection({ users, providers }) {
 function FeaturedServicesSection({ services, providers, categories }) {
   const qc = useQueryClient();
   const updateService = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Service.update(id, data),
+    mutationFn: ({ id, data }) => db.Service.update(id, data),
     onSuccess: () => qc.invalidateQueries(['allServices'])
   });
 

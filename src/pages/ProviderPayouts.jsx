@@ -1,35 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db, auth, invokeLLM, uploadFile } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { TrendingUp, DollarSign, Clock, CheckCircle2, Banknote, Building, Percent, Info } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TrendingUp, DollarSign, Banknote, Percent } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
-const COMMISSION_RATE = 10;
-
-const statusColors = {
-  pending: { bg: '#fbbf24', text: '#000' },
-  approved: { bg: '#3b82f6', text: '#fff' },
-  processing: { bg: '#06b6d4', text: '#fff' },
-  completed: { bg: '#10b981', text: '#fff' },
-  failed: { bg: '#ef4444', text: '#fff' }
+const L = {
+  bg: '#ffffff', bg2: '#f7f7f5', bg3: '#f0efed',
+  border: '#e2e0dc', border2: '#d4d0ca',
+  text: '#111111', text2: '#555555', text3: '#999999',
+  accent: '#FF4D6D', amber: '#FF8C42', green: '#06D6A0', blue: '#4361EE',
 };
 
-function StatusBadge({ status }) {
-  const s = statusColors[status] || statusColors.pending;
-  return (
-    <span className="text-xs font-semibold px-2.5 py-1 rounded-full capitalize" style={{ background: s.bg, color: s.text }}>
-      {status}
-    </span>
-  );
-}
+const STATUS_STYLES = {
+  pending:    { bg: '#fbbf2420', color: '#d97706' },
+  approved:   { bg: '#4361EE15', color: '#4361EE' },
+  processing: { bg: '#7C3AED15', color: '#7C3AED' },
+  completed:  { bg: '#06D6A015', color: '#059669' },
+  failed:     { bg: '#FF4D6D15', color: '#FF4D6D' },
+};
+
+const COMMISSION_RATE = 10;
 
 export default function ProviderPayouts() {
   const [user, setUser] = useState(null);
@@ -38,276 +31,209 @@ export default function ProviderPayouts() {
   const [withdrawMethod, setWithdrawMethod] = useState('bank');
   const [bankDetails, setBankDetails] = useState({ bank_name: '', bank_account: '' });
   const [openWithdraw, setOpenWithdraw] = useState(false);
+  const [tab, setTab] = useState('history');
   const queryClient = useQueryClient();
 
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
-
+  useEffect(() => { auth.me().then(setUser).catch(() => {}); }, []);
   useEffect(() => {
-    if (user?.email) {
-      base44.entities.ServiceProvider.filter({ email: user.email })
-        .then(p => setProvider(p[0] || null));
-    }
+    if (user?.email) db.ServiceProvider.filter({ email: user.email }).then(p => setProvider(p[0] || null));
   }, [user?.email]);
 
-  const { data: orders = [], isLoading: ordersLoading } = useQuery({
+  const { data: orders = [] } = useQuery({
     queryKey: ['completed-orders', provider?.id],
-    queryFn: () => base44.entities.Order.filter({ provider_id: provider?.id, status: 'completed' }),
+    queryFn: () => db.Order.filter({ provider_id: provider?.id, status: 'completed' }),
     enabled: !!provider?.id
   });
 
-  const { data: payouts = [], isLoading: payoutsLoading, refetch: refetchPayouts } = useQuery({
+  const { data: payouts = [], isLoading: payoutsLoading } = useQuery({
     queryKey: ['payouts', provider?.email],
-    queryFn: () => base44.entities.Payout.filter({ provider_email: provider?.email }, '-requested_date'),
+    queryFn: () => db.Payout.filter({ provider_email: provider?.email }, '-requested_date'),
     enabled: !!provider?.email
   });
 
-  // Financial calculations
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.subtotal || 0), 0);
-  const totalCommission = orders.reduce((sum, o) => sum + (o.commission_amount || 0), 0);
+  const totalRevenue = orders.reduce((s, o) => s + (o.subtotal || 0), 0);
+  const totalCommission = orders.reduce((s, o) => s + (o.commission_amount || 0), 0);
   const totalEarnings = totalRevenue - totalCommission;
-  const totalWithdrawn = payouts
-    .filter(p => ['completed', 'approved', 'processing'].includes(p.status))
-    .reduce((sum, p) => sum + p.amount, 0);
-  const pendingPayouts = payouts.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
+  const totalWithdrawn = payouts.filter(p => ['completed','approved','processing'].includes(p.status)).reduce((s, p) => s + p.amount, 0);
+  const pendingPayouts = payouts.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
   const availableBalance = totalEarnings - totalWithdrawn - pendingPayouts;
 
   const requestPayoutMutation = useMutation({
     mutationFn: async () => {
       const amount = parseFloat(withdrawAmount);
       if (isNaN(amount) || amount <= 0) throw new Error('Invalid amount');
-      if (amount > availableBalance) throw new Error(`Max available: $${availableBalance.toFixed(2)}`);
+      if (amount > availableBalance) throw new Error(`Max: $${availableBalance.toFixed(2)}`);
       if (amount < 10) throw new Error('Minimum withdrawal is $10');
-
-      await base44.entities.Payout.create({
-        provider_id: provider.id,
-        provider_email: provider.email,
-        amount,
-        status: 'pending',
+      await db.Payout.create({
+        provider_id: provider.id, provider_email: provider.email, amount, status: 'pending',
         requested_date: new Date().toISOString().split('T')[0],
         bank_account: bankDetails.bank_account,
         bank_name: withdrawMethod === 'bank' ? bankDetails.bank_name : withdrawMethod
       });
-
-      await base44.entities.Notification.create({
-        recipient_email: provider.email,
-        recipient_type: 'provider',
-        type: 'payout_approved',
-        title: 'Payout Request Submitted',
-        message: `Your payout of $${amount} has been submitted and is being reviewed.`,
-        channels: ['email']
-      });
     },
-    onSuccess: () => {
-      toast.success('Payout request submitted');
-      setWithdrawAmount('');
-      setOpenWithdraw(false);
-      queryClient.invalidateQueries({ queryKey: ['payouts'] });
-    },
-    onError: (e) => toast.error(e.message || 'Failed to request payout')
+    onSuccess: () => { toast.success('Payout request submitted'); setWithdrawAmount(''); setOpenWithdraw(false); queryClient.invalidateQueries({ queryKey: ['payouts'] }); },
+    onError: (e) => toast.error(e.message)
   });
 
-  if (!user) {
-    return (
-      <div style={{ background: '#0f0900' }} className="min-h-screen py-10">
-        <div className="max-w-4xl mx-auto px-4"><Skeleton className="h-96" /></div>
-      </div>
-    );
-  }
+  const inputStyle = { height: 44, padding: '0 14px', borderRadius: 12, background: L.bg2, border: `1px solid ${L.border}`, color: L.text, fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box' };
+
+  if (!user) return (
+    <div style={{ minHeight: '100vh', background: L.bg, padding: '48px 32px' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto' }}><Skeleton className="h-96 rounded-2xl" /></div>
+    </div>
+  );
 
   return (
-    <div style={{ background: '#0f0900' }} className="min-h-screen py-6 sm:py-10">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Payouts & Earnings</h1>
-        <p className="text-sm mb-6 sm:mb-8" style={{ color: 'rgba(255,255,255,0.5)' }}>Platform commission: {COMMISSION_RATE}%</p>
+    <div style={{ minHeight: '100vh', background: L.bg, color: L.text, padding: '48px 32px 80px', fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 sm:mb-8">
+        <div style={{ marginBottom: 32 }}>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', fontWeight: 700, letterSpacing: '-1.5px', marginBottom: 6, color: L.text }}>Payouts & Earnings</h1>
+          <p style={{ fontSize: 14, color: L.text2, fontWeight: 300 }}>Platform commission: {COMMISSION_RATE}%</p>
+        </div>
+
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24 }} className="md:grid-cols-4">
           {[
-            { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, icon: TrendingUp, color: '#cb3c7a' },
-            { label: 'Commission Paid', value: `$${totalCommission.toFixed(2)}`, icon: Percent, color: '#f59e0b' },
-            { label: 'Net Earnings', value: `$${totalEarnings.toFixed(2)}`, icon: DollarSign, color: '#10b981' },
-            { label: 'Available', value: `$${Math.max(0, availableBalance).toFixed(2)}`, icon: Banknote, color: '#3b82f6' },
+            { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, icon: TrendingUp, color: L.accent },
+            { label: 'Commission', value: `$${totalCommission.toFixed(2)}`, icon: Percent, color: L.amber },
+            { label: 'Net Earnings', value: `$${totalEarnings.toFixed(2)}`, icon: DollarSign, color: L.green },
+            { label: 'Available', value: `$${Math.max(0, availableBalance).toFixed(2)}`, icon: Banknote, color: L.blue },
           ].map(({ label, value, icon: Icon, color }) => (
-            <Card key={label} style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
-              <CardContent className="p-4">
-                <Icon className="w-5 h-5 mb-2" style={{ color }} />
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</p>
-                <p className="text-xl font-bold text-white">{value}</p>
-              </CardContent>
-            </Card>
+            <div key={label} style={{ background: '#fff', border: `1px solid ${L.border}`, borderRadius: 16, padding: '18px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <Icon size={14} style={{ color }} />
+                <span style={{ fontSize: 11, color: L.text3 }}>{label}</span>
+              </div>
+              <p style={{ fontWeight: 800, fontSize: 20, color: L.text }}>{value}</p>
+            </div>
           ))}
         </div>
 
-        {/* Withdraw Button */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+        {/* Balance + Withdraw */}
+        <div style={{ background: L.bg2, border: `1px solid ${L.border2}`, borderRadius: 20, padding: '24px', marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <p className="text-white font-semibold text-lg">Available Balance: <span style={{ color: '#10b981' }}>${Math.max(0, availableBalance).toFixed(2)}</span></p>
-            {pendingPayouts > 0 && (
-              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>Pending: ${pendingPayouts.toFixed(2)}</p>
-            )}
+            <p style={{ fontSize: 13, color: L.text2, marginBottom: 4 }}>Available Balance</p>
+            <p style={{ fontWeight: 800, fontSize: 32, color: L.green, letterSpacing: '-0.03em' }}>${Math.max(0, availableBalance).toFixed(2)}</p>
+            {pendingPayouts > 0 && <p style={{ fontSize: 12, color: L.amber, marginTop: 4 }}>⏳ ${pendingPayouts.toFixed(2)} pending</p>}
           </div>
           <Dialog open={openWithdraw} onOpenChange={setOpenWithdraw}>
             <DialogTrigger asChild>
-              <Button style={{ background: '#cb3c7a' }} className="text-white" disabled={availableBalance < 10}>
-                <Banknote className="w-4 h-4 mr-2" /> Withdraw Funds
-              </Button>
+              <button disabled={availableBalance < 10}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 100, background: L.text, border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: availableBalance >= 10 ? 'pointer' : 'not-allowed', opacity: availableBalance >= 10 ? 1 : 0.5 }}>
+                <Banknote size={16} /> Withdraw Funds
+              </button>
             </DialogTrigger>
-            <DialogContent style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)' }}>
-              <DialogHeader>
-                <DialogTitle className="text-white">Request Withdrawal</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
+            <DialogContent>
+              <DialogHeader><DialogTitle>Request Withdrawal</DialogTitle></DialogHeader>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
-                  <Label className="text-white">Withdrawal Method</Label>
+                  <label style={{ fontSize: 13, color: L.text2, display: 'block', marginBottom: 6 }}>Withdrawal Method</label>
                   <Select value={withdrawMethod} onValueChange={setWithdrawMethod}>
-                    <SelectTrigger style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent style={{ background: '#140b00' }}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
                       <SelectItem value="bank">Bank Transfer</SelectItem>
-                      <SelectItem value="mobile_money">Mobile Money</SelectItem>
                       <SelectItem value="paypal">PayPal</SelectItem>
                       <SelectItem value="upi">UPI</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-
                 {withdrawMethod === 'bank' && (
                   <>
                     <div>
-                      <Label className="text-white">Bank Name</Label>
-                      <Input value={bankDetails.bank_name}
-                        onChange={e => setBankDetails({ ...bankDetails, bank_name: e.target.value })}
-                        placeholder="e.g. HDFC Bank"
-                        style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
-                        className="placeholder:text-gray-500" />
+                      <label style={{ fontSize: 13, color: L.text2, display: 'block', marginBottom: 6 }}>Bank Name</label>
+                      <input value={bankDetails.bank_name} onChange={e => setBankDetails({ ...bankDetails, bank_name: e.target.value })} placeholder="e.g. Chase Bank" style={inputStyle} />
                     </div>
                     <div>
-                      <Label className="text-white">Account Number</Label>
-                      <Input value={bankDetails.bank_account}
-                        onChange={e => setBankDetails({ ...bankDetails, bank_account: e.target.value })}
-                        placeholder="Account number"
-                        style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
-                        className="placeholder:text-gray-500" />
+                      <label style={{ fontSize: 13, color: L.text2, display: 'block', marginBottom: 6 }}>Account Number</label>
+                      <input value={bankDetails.bank_account} onChange={e => setBankDetails({ ...bankDetails, bank_account: e.target.value })} placeholder="Account number" style={inputStyle} />
                     </div>
                   </>
                 )}
-
-                {(withdrawMethod === 'mobile_money' || withdrawMethod === 'paypal' || withdrawMethod === 'upi') && (
+                {(withdrawMethod === 'paypal' || withdrawMethod === 'upi') && (
                   <div>
-                    <Label className="text-white">{withdrawMethod === 'paypal' ? 'PayPal Email' : withdrawMethod === 'upi' ? 'UPI ID' : 'Mobile Number'}</Label>
-                    <Input value={bankDetails.bank_account}
-                      onChange={e => setBankDetails({ ...bankDetails, bank_account: e.target.value })}
-                      placeholder={withdrawMethod === 'paypal' ? 'you@paypal.com' : withdrawMethod === 'upi' ? 'yourname@upi' : '+91 99999 99999'}
-                      style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
-                      className="placeholder:text-gray-500" />
+                    <label style={{ fontSize: 13, color: L.text2, display: 'block', marginBottom: 6 }}>{withdrawMethod === 'paypal' ? 'PayPal Email' : 'UPI ID'}</label>
+                    <input value={bankDetails.bank_account} onChange={e => setBankDetails({ ...bankDetails, bank_account: e.target.value })} placeholder={withdrawMethod === 'paypal' ? 'you@paypal.com' : 'yourname@upi'} style={inputStyle} />
                   </div>
                 )}
-
                 <div>
-                  <Label className="text-white">Amount</Label>
-                  <Input type="number" value={withdrawAmount}
-                    onChange={e => setWithdrawAmount(e.target.value)}
-                    placeholder={`Max: $${availableBalance.toFixed(2)}`}
-                    max={availableBalance}
-                    style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
-                    className="placeholder:text-gray-500" />
-                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Minimum withdrawal: $10</p>
+                  <label style={{ fontSize: 13, color: L.text2, display: 'block', marginBottom: 6 }}>Amount (min $10, max ${availableBalance.toFixed(2)})</label>
+                  <input type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="Enter amount" style={inputStyle} />
                 </div>
-
-                <Button className="w-full text-white" style={{ background: '#cb3c7a' }}
-                  onClick={() => requestPayoutMutation.mutate()}
-                  disabled={requestPayoutMutation.isPending || !withdrawAmount}>
+                <button onClick={() => requestPayoutMutation.mutate()} disabled={requestPayoutMutation.isPending || !withdrawAmount}
+                  style={{ padding: '12px', borderRadius: 100, background: L.text, border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: withdrawAmount ? 1 : 0.5 }}>
                   {requestPayoutMutation.isPending ? 'Processing...' : 'Request Withdrawal'}
-                </Button>
+                </button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
 
-        <Tabs defaultValue="history">
-          <TabsList style={{ background: 'rgba(255,255,255,0.05)' }} className="border border-white/10 mb-4">
-            <TabsTrigger value="history" className="text-white data-[state=active]:bg-pink-500/20">Withdrawal History</TabsTrigger>
-            <TabsTrigger value="earnings" className="text-white data-[state=active]:bg-pink-500/20">Earnings Breakdown</TabsTrigger>
-          </TabsList>
+        {/* Tabs */}
+        <div style={{ display: 'inline-flex', gap: 4, padding: 4, background: L.bg2, border: `1px solid ${L.border}`, borderRadius: 100, marginBottom: 20 }}>
+          {[{ k: 'history', l: 'Withdrawal History' }, { k: 'earnings', l: 'Earnings Breakdown' }].map(t => (
+            <button key={t.k} onClick={() => setTab(t.k)}
+              style={{ padding: '9px 18px', borderRadius: 100, border: 'none', background: tab === t.k ? L.text : 'transparent', color: tab === t.k ? '#fff' : L.text2, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+              {t.l}
+            </button>
+          ))}
+        </div>
 
-          <TabsContent value="history">
-            <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
-              <CardContent className="pt-4">
-                {payoutsLoading ? (
-                  <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16" />)}</div>
-                ) : payouts.length > 0 ? (
-                  <div className="space-y-3">
-                    {payouts.map((payout) => (
-                      <div key={payout.id} className="flex items-center justify-between p-4 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                        <div className="flex items-center gap-3">
-                          <Banknote className="w-5 h-5" style={{ color: '#cb3c7a' }} />
-                          <div>
-                            <p className="text-white font-semibold">${payout.amount}</p>
-                            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                              {payout.bank_name || 'Bank Transfer'} · {new Date(payout.requested_date).toLocaleDateString()}
-                            </p>
-                          </div>
+        {tab === 'history' && (
+          <div style={{ background: '#fff', border: `1px solid ${L.border}`, borderRadius: 20, padding: '20px 24px' }}>
+            {payoutsLoading ? <Skeleton className="h-32 rounded-xl" /> : payouts.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {payouts.map(payout => {
+                  const st = STATUS_STYLES[payout.status] || STATUS_STYLES.pending;
+                  return (
+                    <div key={payout.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderRadius: 14, background: L.bg2 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <Banknote size={16} style={{ color: L.accent }} />
+                        <div>
+                          <p style={{ fontWeight: 700, fontSize: 15, color: L.text }}>${payout.amount}</p>
+                          <p style={{ fontSize: 12, color: L.text3 }}>{payout.bank_name || 'Transfer'} · {new Date(payout.requested_date).toLocaleDateString()}</p>
                         </div>
-                        <StatusBadge status={payout.status} />
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center py-8" style={{ color: 'rgba(255,255,255,0.5)' }}>No withdrawal history</p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="earnings">
-            <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
-              <CardHeader>
-                <CardTitle className="text-white text-base">Commission Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.7)' }}>Platform Commission Rate</span>
-                    <span className="text-white font-semibold">{COMMISSION_RATE}%</span>
-                  </div>
-                  <div className="flex justify-between p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.7)' }}>Total Orders Completed</span>
-                    <span className="text-white font-semibold">{orders.length}</span>
-                  </div>
-                  <div className="flex justify-between p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.7)' }}>Gross Revenue</span>
-                    <span className="text-white font-semibold">${totalRevenue.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between p-3 rounded-lg" style={{ background: 'rgba(239,68,68,0.07)' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.7)' }}>Commission Deducted</span>
-                    <span style={{ color: '#ef4444' }} className="font-semibold">-${totalCommission.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between p-3 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                    <span className="text-white font-semibold">Net Earnings</span>
-                    <span style={{ color: '#10b981' }} className="font-bold text-lg">${totalEarnings.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                {orders.length > 0 && (
-                  <div>
-                    <p className="text-white font-medium mb-3">Recent Completed Orders</p>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {orders.slice(0, 10).map(order => (
-                        <div key={order.id} className="flex justify-between text-sm p-2 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                          <span style={{ color: 'rgba(255,255,255,0.6)' }}>{order.service_name} · {order.scheduled_date}</span>
-                          <div className="text-right">
-                            <span className="text-white">${((order.subtotal || 0) - (order.commission_amount || 0)).toFixed(2)}</span>
-                          </div>
-                        </div>
-                      ))}
+                      <span style={{ padding: '4px 12px', borderRadius: 100, fontSize: 12, fontWeight: 700, background: st.bg, color: st.color }}>{payout.status}</span>
                     </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                  );
+                })}
+              </div>
+            ) : <p style={{ textAlign: 'center', color: L.text2, padding: '32px 0', fontWeight: 300 }}>No withdrawal history</p>}
+          </div>
+        )}
+
+        {tab === 'earnings' && (
+          <div style={{ background: '#fff', border: `1px solid ${L.border}`, borderRadius: 20, padding: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+              {[
+                { l: 'Platform Commission Rate', v: `${COMMISSION_RATE}%`, c: L.text2 },
+                { l: 'Total Orders Completed', v: orders.length, c: L.text2 },
+                { l: 'Gross Revenue', v: `$${totalRevenue.toFixed(2)}`, c: L.text },
+                { l: 'Commission Deducted', v: `-$${totalCommission.toFixed(2)}`, c: L.accent },
+                { l: 'Net Earnings', v: `$${totalEarnings.toFixed(2)}`, c: L.green },
+              ].map(({ l, v, c }) => (
+                <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 12, background: L.bg2 }}>
+                  <span style={{ color: L.text2, fontSize: 14 }}>{l}</span>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: c }}>{v}</span>
+                </div>
+              ))}
+            </div>
+            {orders.length > 0 && (
+              <>
+                <h4 style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: L.text }}>Recent Orders</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto' }}>
+                  {orders.slice(0, 10).map(order => (
+                    <div key={order.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 10, background: L.bg2, fontSize: 13 }}>
+                      <span style={{ color: L.text2 }}>{order.service_name} · {order.scheduled_date}</span>
+                      <span style={{ color: L.text, fontWeight: 600 }}>${((order.subtotal || 0) - (order.commission_amount || 0)).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

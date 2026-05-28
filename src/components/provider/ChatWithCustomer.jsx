@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db, auth, invokeLLM, uploadFile } from '@/api/db';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ export default function ChatWithCustomer({ open, onClose, order, senderEmail }) 
 
   const { data: messages = [] } = useQuery({
     queryKey: ['chat', conversationId],
-    queryFn: () => base44.entities.ChatMessage.filter({ conversation_id: conversationId }, 'created_date'),
+    queryFn: () => db.ChatMessage.filter({ conversation_id: conversationId }, 'created_date'),
     enabled: !!conversationId && open,
     refetchInterval: open ? 5000 : false
   });
@@ -30,7 +30,7 @@ export default function ChatWithCustomer({ open, onClose, order, senderEmail }) 
     setSending(true);
     const text = message.trim();
     setMessage('');
-    await base44.entities.ChatMessage.create({
+    await db.ChatMessage.create({
       user_email: senderEmail,
       conversation_id: conversationId,
       role: 'user',

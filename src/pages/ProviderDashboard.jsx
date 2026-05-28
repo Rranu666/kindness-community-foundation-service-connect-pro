@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db, auth, invokeLLM, uploadFile, callFunction } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useOptimisticMutation } from '@/hooks/useOptimisticMutation';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
@@ -8,7 +9,8 @@ import {
   LayoutDashboard, Package, ShoppingCart, Star, DollarSign, Plus,
   MoreVertical, Edit, Trash2, Eye, Clock, CheckCircle, XCircle,
   ArrowUpRight, Calendar, Wallet, CheckCircle2, Play, Square,
-  Camera, MapPin, User, Phone, MessageCircle, AlertCircle, Image
+  Camera, MapPin, User, Phone, MessageCircle, AlertCircle, Image,
+  FileText, BarChart2, TrendingUp, AlertTriangle
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,12 +27,19 @@ import { toast } from 'sonner';
 import { Skeleton } from "@/components/ui/skeleton";
 import ServiceFormDialog from '@/components/provider/ServiceFormDialog';
 import ChatWithCustomer from '@/components/provider/ChatWithCustomer';
+import DocumentsTab from '@/components/provider/DocumentsTab';
+import ServiceAreasTab from '@/components/provider/ServiceAreasTab';
+import AvailabilityCalendarTab from '@/components/provider/AvailabilityCalendarTab';
+import WeeklyEarningsTab from '@/components/provider/WeeklyEarningsTab';
+import BookingCalendarView from '@/components/provider/BookingCalendarView';
+
+import { THEME as L } from '@/lib/theme';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const statusColors = {
-  pending: { bg: '#fbbf24', text: '#000' },
-  confirmed: { bg: '#3b82f6', text: '#fff' },
+  pending: { bg: '#f59e0b', text: '#000' },
+  confirmed: { bg: L.blue, text: '#fff' },
   in_progress: { bg: '#8b5cf6', text: '#fff' },
   completed: { bg: '#10b981', text: '#fff' },
   cancelled: { bg: '#ef4444', text: '#fff' }
@@ -49,8 +58,6 @@ export default function ProviderDashboard() {
   const [user, setUser] = useState(null);
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
-  const [servicePriceType, setServicePriceType] = useState('fixed');
-  const [serviceForm, setServiceForm] = useState({ name: '', description: '', price: '', duration_minutes: '' });
   const [workflowOrder, setWorkflowOrder] = useState(null);
   const [proofImages, setProofImages] = useState([]);
   const [uploadingProof, setUploadingProof] = useState(false);
@@ -58,14 +65,17 @@ export default function ProviderDashboard() {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({});
   const [availabilityDays, setAvailabilityDays] = useState([]);
+  const [localProvider, setLocalProvider] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const queryClient = useQueryClient();
 
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
+  useEffect(() => { auth.me().then(setUser).catch(() => {}); }, []);
 
   const { data: provider, isLoading: loadingProvider } = useQuery({
     queryKey: ['myProvider', user?.email],
     queryFn: async () => {
-      const providers = await base44.entities.ServiceProvider.filter({ email: user.email });
+      const providers = await db.ServiceProvider.filter({ email: user.email });
       return providers[0];
     },
     enabled: !!user?.email
@@ -73,26 +83,30 @@ export default function ProviderDashboard() {
 
   const { data: services = [] } = useQuery({
     queryKey: ['myServices', provider?.id],
-    queryFn: () => base44.entities.Service.filter({ provider_id: provider.id }),
-    enabled: !!provider?.id
+    queryFn: () => db.Service.filter({ provider_id: provider.id }),
+    enabled: !!provider?.id,
+    staleTime: 3 * 60 * 1000,
   });
 
   const { data: orders = [] } = useQuery({
     queryKey: ['myOrders', provider?.id],
-    queryFn: () => base44.entities.Order.filter({ provider_id: provider.id }, '-created_date'),
-    enabled: !!provider?.id
+    queryFn: () => db.Order.filter({ provider_id: provider.id }, '-created_date'),
+    enabled: !!provider?.id,
+    staleTime: 1 * 60 * 1000,
   });
 
   const { data: reviews = [] } = useQuery({
     queryKey: ['myReviews', provider?.id],
-    queryFn: () => base44.entities.Review.filter({ provider_id: provider.id }, '-created_date'),
-    enabled: !!provider?.id
+    queryFn: () => db.Review.filter({ provider_id: provider.id }, '-created_date'),
+    enabled: !!provider?.id,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: payouts = [] } = useQuery({
     queryKey: ['myPayouts', provider?.email],
-    queryFn: () => base44.entities.Payout.filter({ provider_email: provider.email }),
-    enabled: !!provider?.email
+    queryFn: () => db.Payout.filter({ provider_email: provider.email }),
+    enabled: !!provider?.email,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Stats
@@ -110,7 +124,7 @@ export default function ProviderDashboard() {
 
   // Service mutations
   const createServiceMutation = useMutation({
-    mutationFn: (data) => base44.entities.Service.create(data),
+    mutationFn: (data) => db.Service.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myServices'] });
       setServiceDialogOpen(false);
@@ -120,7 +134,7 @@ export default function ProviderDashboard() {
   });
 
   const updateServiceMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Service.update(id, data),
+    mutationFn: ({ id, data }) => db.Service.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myServices'] });
       setServiceDialogOpen(false);
@@ -130,32 +144,31 @@ export default function ProviderDashboard() {
   });
 
   const deleteServiceMutation = useMutation({
-    mutationFn: (id) => base44.entities.Service.delete(id),
+    mutationFn: (id) => db.Service.delete(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['myServices'] }); toast.success('Service deleted'); }
   });
 
-  // Order mutations
-  const updateOrderMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Order.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myOrders'] });
-      toast.success('Order updated');
-    }
+  // Order mutations (optimistic)
+  const updateOrderMutation = useOptimisticMutation({
+    mutationFn: ({ id, data }) => db.Order.update(id, data),
+    queryKeys: ['myOrders'],
+    onSuccess: () => toast.success('Order updated'),
   });
 
-  const updateProviderMutation = useMutation({
-    mutationFn: (data) => base44.entities.ServiceProvider.update(provider.id, data),
+  // Provider mutations (optimistic)
+  const updateProviderMutation = useOptimisticMutation({
+    mutationFn: (data) => db.ServiceProvider.update(provider.id, data),
+    queryKeys: ['myProvider'],
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myProvider'] });
       setEditProfileOpen(false);
       toast.success('Profile updated');
-    }
+    },
   });
 
   const handleOrderAction = (order, status) => {
     updateOrderMutation.mutate({ id: order.id, data: { status } });
     // Send notification to customer
-    base44.entities.Notification.create({
+    db.Notification.create({
       recipient_email: order.customer_email,
       recipient_type: 'customer',
       type: status === 'confirmed' ? 'provider_assigned' : status === 'in_progress' ? 'service_started' : status === 'completed' ? 'service_completed' : 'cancellation',
@@ -166,35 +179,13 @@ export default function ProviderDashboard() {
     }).catch(() => {});
   };
 
-  const handleServiceSubmit = (e) => {
-    e.preventDefault();
-    const data = {
-      provider_id: provider.id,
-      name: serviceForm.name,
-      description: serviceForm.description,
-      price: parseFloat(serviceForm.price),
-      price_type: servicePriceType,
-      duration_minutes: parseInt(serviceForm.duration_minutes) || null,
-      is_active: true
-    };
-    if (editingService) {
-      updateServiceMutation.mutate({ id: editingService.id, data });
-    } else {
-      createServiceMutation.mutate(data);
-    }
-  };
-
   const openEditService = (service) => {
     setEditingService(service);
-    setServiceForm({ name: service.name, description: service.description || '', price: service.price, duration_minutes: service.duration_minutes || '' });
-    setServicePriceType(service.price_type || 'fixed');
     setServiceDialogOpen(true);
   };
 
   const openNewService = () => {
     setEditingService(null);
-    setServiceForm({ name: '', description: '', price: '', duration_minutes: '' });
-    setServicePriceType('fixed');
     setServiceDialogOpen(true);
   };
 
@@ -203,7 +194,7 @@ export default function ProviderDashboard() {
     if (!file) return;
     setUploadingProof(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await uploadFile({ file });
       setProofImages(prev => [...prev, file_url]);
       toast.success('Proof image uploaded');
     } catch {
@@ -215,13 +206,13 @@ export default function ProviderDashboard() {
 
   const completeWithProof = async () => {
     if (!workflowOrder) return;
-    await base44.entities.Order.update(workflowOrder.id, {
+    await db.Order.update(workflowOrder.id, {
       status: 'completed',
       payment_status: 'paid'
     });
     queryClient.invalidateQueries({ queryKey: ['myOrders'] });
     // Notify customer
-    await base44.entities.Notification.create({
+    await db.Notification.create({
       recipient_email: workflowOrder.customer_email,
       recipient_type: 'customer',
       type: 'service_completed',
@@ -258,26 +249,30 @@ export default function ProviderDashboard() {
 
   if (loadingProvider) {
     return (
-      <div className="min-h-screen p-4 sm:p-6" style={{ background: '#0f0900' }}>
+      <div className="min-h-screen p-6" style={{ background: L.bg }}>
         <div className="max-w-6xl mx-auto">
-          <Skeleton className="h-10 w-48 sm:w-64 mb-6 sm:mb-8 opacity-30" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-8">
-            {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 sm:h-32 rounded-xl opacity-30" />)}
+          <Skeleton className="h-10 w-64 mb-8" />
+          <div className="grid grid-cols-4 gap-6 mb-8">
+            {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
           </div>
         </div>
       </div>
     );
   }
 
+  // Merge local optimistic updates with fetched provider
+  const activeProvider = localProvider ? { ...provider, ...localProvider } : provider;
+  const handleProviderUpdate = (patch) => setLocalProvider(prev => ({ ...prev, ...patch }));
+
   if (!provider) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0900' }}>
-        <Card style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="max-w-md w-full mx-6 border">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: L.bg }}>
+        <Card style={{ background: L.bg2, borderColor: L.border }} className="max-w-md w-full mx-6 border">
           <CardContent className="pt-8 text-center">
-            <h2 className="text-xl font-semibold text-white mb-2">No Business Profile</h2>
-            <p style={{ color: 'rgba(255,255,255,0.6)' }} className="mb-6">Register your business to start receiving orders</p>
+            <h2 className="text-xl font-semibold" style={{ color: L.text, marginBottom: 8 }}>No Business Profile</h2>
+            <p style={{ color: L.text2, marginBottom: 24 }}>Register your business to start receiving orders</p>
             <Link to={createPageUrl('ProviderSignup')}>
-              <Button className="text-white" style={{ background: '#cb3c7a' }}>Register Business</Button>
+              <Button className="text-white" style={{ background: L.accent }}>Register Business</Button>
             </Link>
           </CardContent>
         </Card>
@@ -286,65 +281,68 @@ export default function ProviderDashboard() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0f0900' }}>
+    <div className="min-h-screen" style={{ background: L.bg }}>
       {/* Header */}
-      <header style={{ background: '#140b00', borderBottom: '1px solid rgba(203,60,122,0.2)' }} className="py-3 sm:py-4">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(135deg, #cb3c7a, #ef4444)' }}>
-              {provider.profile_image ? (
-                <img src={provider.profile_image} alt="" className="w-full h-full object-cover" />
+      <header style={{ background: L.bg2, borderBottom: `1px solid ${L.border}`, backdropFilter: 'blur(20px)' }} className="py-4">
+        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl overflow-hidden" style={{ background: L.grad }}>
+              {activeProvider.profile_image ? (
+                <img src={activeProvider.profile_image} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-white font-bold">
-                  {provider.business_name?.charAt(0)}
+                <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
+                   {activeProvider.business_name?.charAt(0)}
                 </div>
               )}
             </div>
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold text-white truncate">{provider.business_name}</h1>
-              {!provider.is_verified && (
-                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
-                  Pending Verification
-                </span>
-              )}
-              {provider.is_verified && (
-                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981' }}>
-                  Verified
-                </span>
-              )}
+            <div>
+              <h1 className="text-lg font-bold" style={{ color: L.text }}>{activeProvider.business_name}</h1>
+              {!activeProvider.is_verified && (
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
+                    Pending Verification
+                  </span>
+                )}
+                {activeProvider.is_verified && (
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981' }}>
+                    Verified
+                  </span>
+                )}
             </div>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <Button variant="outline" size="sm" className="text-white border-white/20 px-2 sm:px-3"
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" size="sm" className="text-white border-white/20"
               onClick={openProfile}>
-              <Edit className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Edit Profile</span>
+              <Edit className="w-4 h-4 mr-1" /> Edit Profile
             </Button>
-            <Link to={createPageUrl(`ProviderProfile?id=${provider.id}`)}>
-              <Button variant="outline" size="sm" className="text-white border-white/20 px-2 sm:px-3">
-                <Eye className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Public View</span>
+            <Link to={createPageUrl(`ProviderProfile?id=${activeProvider.id}`)}>
+              <Button variant="outline" size="sm" style={{ color: L.text2, borderColor: L.border }}>
+                <Eye className="w-4 h-4 mr-1" /> Public View
               </Button>
             </Link>
+            <Button variant="outline" size="sm" style={{ color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="w-4 h-4 mr-1" /> Delete Account
+            </Button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+      <div className="max-w-6xl mx-auto px-6 py-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           {[
             { label: 'Total Earnings', value: `$${totalEarnings.toFixed(0)}`, icon: DollarSign, color: '#10b981' },
-            { label: 'Available', value: `$${availableBalance.toFixed(0)}`, icon: Wallet, color: '#cb3c7a' },
-            { label: 'New Orders', value: newOrders.length, icon: AlertCircle, color: '#fbbf24' },
+            { label: 'Available', value: `$${availableBalance.toFixed(0)}`, icon: Wallet, color: L.accent },
+            { label: 'New Orders', value: newOrders.length, icon: AlertCircle, color: L.amber },
             { label: 'Active Jobs', value: activeOrders.length, icon: Play, color: '#8b5cf6' },
-            { label: 'Rating', value: provider.rating?.toFixed(1) || 'N/A', icon: Star, color: '#f59e0b' },
+            { label: 'Rating', value: activeProvider.rating?.toFixed(1) || 'N/A', icon: Star, color: L.amber },
           ].map(({ label, value, icon: Icon, color }) => (
-            <Card key={label} style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
+            <Card key={label} style={{ background: L.bg2, borderColor: L.border }} className="border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2">
                   <Icon className="w-5 h-5" style={{ color }} />
                   <div>
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</p>
-                    <p className="text-xl font-bold text-white">{value}</p>
+                    <p className="text-xs" style={{ color: L.text3 }}>{label}</p>
+                    <p className="text-xl font-bold" style={{ color: L.text }}>{value}</p>
                   </div>
                 </div>
               </CardContent>
@@ -354,7 +352,7 @@ export default function ProviderDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="new">
-          <TabsList style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(203,60,122,0.2)' }} className="border flex-wrap h-auto gap-1 p-1">
+          <TabsList style={{ background: L.bg2, borderColor: L.border }} className="border flex-wrap h-auto gap-1 p-1">
             {[
               { value: 'new', label: `New (${newOrders.length})`, icon: AlertCircle },
               { value: 'active', label: `Active (${activeOrders.length})`, icon: Play },
@@ -363,8 +361,12 @@ export default function ProviderDashboard() {
               { value: 'services', label: `Services (${services.length})`, icon: Package },
               { value: 'reviews', label: `Reviews (${reviews.length})`, icon: Star },
               { value: 'availability', label: 'Calendar', icon: Calendar },
+              { value: 'service_areas', label: 'Service Areas', icon: MapPin },
+              { value: 'documents', label: 'Documents', icon: FileText },
+              { value: 'earnings', label: 'Earnings', icon: BarChart2 },
+              { value: 'analytics', label: 'Analytics', icon: TrendingUp },
             ].map(({ value, label, icon: Icon }) => (
-              <TabsTrigger key={value} value={value} className="text-white data-[state=active]:bg-pink-500/20 data-[state=active]:text-white hover:bg-white/10 hover:text-white text-xs">
+              <TabsTrigger key={value} value={value} style={{ color: L.text2 }} className="text-xs data-[state=active]:bg-pink-500/20">
                 <Icon className="w-3.5 h-3.5 mr-1" />{label}
               </TabsTrigger>
             ))}
@@ -380,13 +382,13 @@ export default function ProviderDashboard() {
                     actions={
                       <div className="flex gap-2">
                         <Button size="sm" style={{ background: '#10b981' }} className="text-white"
-                          onClick={() => handleOrderAction(order, 'confirmed')}>
-                          <CheckCircle2 className="w-4 h-4 mr-1" /> Accept
-                        </Button>
-                        <Button size="sm" style={{ background: '#ef4444' }} className="text-white"
-                          onClick={() => handleOrderAction(order, 'cancelled')}>
-                          <XCircle className="w-4 h-4 mr-1" /> Reject
-                        </Button>
+                                onClick={() => handleOrderAction(order, 'confirmed')}>
+                                <CheckCircle2 className="w-4 h-4 mr-1" /> Accept
+                              </Button>
+                              <Button size="sm" style={{ background: '#dc2626' }} className="text-white"
+                                onClick={() => handleOrderAction(order, 'cancelled')}>
+                                <XCircle className="w-4 h-4 mr-1" /> Reject
+                              </Button>
                       </div>
                     }
                   />
@@ -450,40 +452,39 @@ export default function ProviderDashboard() {
           {/* SERVICES Tab */}
           <TabsContent value="services" className="mt-4">
             <div className="flex justify-end mb-4">
-              <Button className="text-white" style={{ background: '#cb3c7a' }} onClick={openNewService}>
+              <Button className="text-white" style={{ background: L.accent }} onClick={openNewService}>
                 <Plus className="w-4 h-4 mr-2" /> Add Service
               </Button>
             </div>
             {services.length > 0 ? (
               <div className="grid gap-3">
                 {services.map((service) => (
-
-                  <Card key={service.id} style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
+                  <Card key={service.id} style={{ background: L.bg2, borderColor: L.border }} className="border">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-white">{service.name}</h4>
-                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: service.is_active ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: service.is_active ? '#10b981' : '#ef4444' }}>
+                            <h4 className="font-semibold" style={{ color: L.text }}>{service.name}</h4>
+                              <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: service.is_active ? 'rgba(16,185,129,0.15)' : 'rgba(220,38,38,0.15)', color: service.is_active ? '#10b981' : '#dc2626' }}>
                               {service.is_active ? 'Active' : 'Inactive'}
                             </span>
                           </div>
-                          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>{service.description}</p>
+                          <p className="text-sm" style={{ color: L.text2 }}>{service.description}</p>
                           {service.duration_minutes && (
-                            <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                            <p className="text-xs mt-1" style={{ color: L.text3 }}>
                               <Clock className="w-3 h-3 inline mr-1" />{service.duration_minutes} min
                             </p>
                           )}
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="text-right">
-                            <p className="font-bold text-white">${service.price}</p>
-                            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>{service.price_type}</p>
+                            <p className="font-bold" style={{ color: L.text }}>${service.price}</p>
+                            <p className="text-xs" style={{ color: L.text3 }}>{service.price_type}</p>
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-white/60"><MoreVertical className="w-4 h-4" /></Button>
-                            </DropdownMenuTrigger>
+                               <Button variant="ghost" size="icon" style={{ color: L.text3 }}><MoreVertical className="w-4 h-4" /></Button>
+                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                               <DropdownMenuItem onClick={() => openEditService(service)}>
                                 <Edit className="w-4 h-4 mr-2" /> Edit
@@ -508,26 +509,26 @@ export default function ProviderDashboard() {
           {/* REVIEWS Tab */}
           <TabsContent value="reviews" className="mt-4">
             {reviews.length > 0 ? (
-              <div className="space-y-3">
-                {reviews.map((review) => (
-                  <Card key={review.id} style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
+                <div className="space-y-3">
+                  {reviews.map((review) => (
+                    <Card key={review.id} style={{ background: L.bg2, borderColor: L.border }} className="border">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
-                          style={{ background: 'rgba(203,60,122,0.2)', color: '#cb3c7a' }}>
+                          style={{ background: `${L.accent}20`, color: L.accent }}>
                           {review.customer_name?.charAt(0)?.toUpperCase()}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-white">{review.customer_name}</span>
+                            <span className="font-medium" style={{ color: L.text }}>{review.customer_name}</span>
                             <div className="flex gap-0.5">
                               {[1,2,3,4,5].map(s => (
                                 <Star key={s} className="w-4 h-4" style={{ color: s <= review.rating ? '#f59e0b' : 'rgba(255,255,255,0.2)', fill: s <= review.rating ? '#f59e0b' : 'transparent' }} />
                               ))}
                             </div>
                           </div>
-                          {review.comment && <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>{review.comment}</p>}
-                          <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{new Date(review.created_date).toLocaleDateString()}</p>
+                          {review.comment && <p className="text-sm" style={{ color: L.text2 }}>{review.comment}</p>}
+                          <p className="text-xs mt-1" style={{ color: L.text3 }}>{new Date(review.created_date).toLocaleDateString()}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -538,80 +539,37 @@ export default function ProviderDashboard() {
           </TabsContent>
 
           {/* AVAILABILITY Tab */}
-          <TabsContent value="availability" className="mt-4">
-            <Card style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Calendar className="w-5 h-5" style={{ color: '#cb3c7a' }} />
-                  Availability Calendar
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <p className="text-sm text-white/60 mb-3">Select days you're available to accept bookings</p>
-                  <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
-                    {DAYS.map((day) => {
-                      const active = (provider.availability || []).includes(day);
-                      return (
-                        <button key={day}
-                          onClick={() => {
-                            const newDays = active
-                              ? (provider.availability || []).filter(d => d !== day)
-                              : [...(provider.availability || []), day];
-                            updateProviderMutation.mutate({ availability: newDays });
-                          }}
-                          className="p-3 rounded-xl text-sm font-medium transition-all border"
-                          style={{
-                            background: active ? 'rgba(203,60,122,0.15)' : 'rgba(255,255,255,0.04)',
-                            borderColor: active ? '#cb3c7a' : 'rgba(255,255,255,0.1)',
-                            color: active ? '#cb3c7a' : 'rgba(255,255,255,0.6)'
-                          }}>
-                          {day.slice(0, 3)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+           <TabsContent value="availability" className="mt-4">
+             <div style={{ marginBottom: 24 }}>
+               <BookingCalendarView orders={orders.filter(o => ['pending', 'confirmed', 'in_progress'].includes(o.status))} />
+             </div>
+             <AvailabilityCalendarTab provider={activeProvider} onUpdate={handleProviderUpdate} />
+           </TabsContent>
 
-                <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div>
-                    <p className="text-white font-medium">Currently Accepting Orders</p>
-                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>Toggle to pause/resume your availability</p>
-                  </div>
-                  <Switch
-                    checked={provider.is_active}
-                    onCheckedChange={(v) => updateProviderMutation.mutate({ is_active: v })}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Upcoming Schedule */}
-            <Card style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border mt-4">
-              <CardHeader>
-                <CardTitle className="text-white text-base">Upcoming Jobs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {activeOrders.length > 0 ? (
-                  <div className="space-y-2">
-                    {activeOrders.slice(0, 5).map(order => (
-                      <div key={order.id} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                        <div className="w-2 h-2 rounded-full" style={{ background: '#cb3c7a' }} />
-                        <div className="flex-1">
-                          <p className="text-white text-sm font-medium">{order.service_name}</p>
-                          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{order.scheduled_date} · {order.scheduled_time}</p>
-                        </div>
-                        <StatusBadge status={order.status} />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center py-4" style={{ color: 'rgba(255,255,255,0.4)' }}>No upcoming jobs</p>
-                )}
-              </CardContent>
-            </Card>
+          {/* SERVICE AREAS Tab */}
+          <TabsContent value="service_areas" className="mt-4">
+            <ServiceAreasTab provider={activeProvider} onUpdate={handleProviderUpdate} />
           </TabsContent>
-        </Tabs>
+
+          {/* DOCUMENTS Tab */}
+          <TabsContent value="documents" className="mt-4">
+            <DocumentsTab provider={activeProvider} onUpdate={handleProviderUpdate} />
+          </TabsContent>
+
+          {/* EARNINGS Tab */}
+          <TabsContent value="earnings" className="mt-4">
+            <WeeklyEarningsTab orders={orders} provider={activeProvider} />
+          </TabsContent>
+
+          {/* ANALYTICS Tab */}
+          <TabsContent value="analytics" className="mt-4">
+            <Link to={createPageUrl('ProviderAnalytics')}>
+              <button style={{ padding: '12px 20px', borderRadius: 12, background: L.accent, border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer', width: '100%' }}>
+                Open Full Analytics Dashboard →
+              </button>
+            </Link>
+          </TabsContent>
+          </Tabs>
       </div>
 
       {/* Service Form Dialog (enhanced) */}
@@ -631,33 +589,33 @@ export default function ProviderDashboard() {
 
       {/* Workflow: Complete Service Dialog */}
       <Dialog open={!!workflowOrder} onOpenChange={() => setWorkflowOrder(null)}>
-        <DialogContent style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.3)' }} className="border">
+        <DialogContent style={{ background: L.bg2, borderColor: L.border }} className="border">
           <DialogHeader>
-            <DialogTitle className="text-white">Complete Service</DialogTitle>
+            <DialogTitle style={{ color: L.text }}>Complete Service</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="p-3 rounded-lg" style={{ background: 'rgba(203,60,122,0.08)' }}>
-              <p className="text-white font-medium">{workflowOrder?.service_name}</p>
-              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>for {workflowOrder?.customer_name}</p>
+            <div className="p-3 rounded-lg" style={{ background: `${L.accent}08` }}>
+              <p style={{ color: L.text, fontWeight: 600, marginBottom: 2 }}>{workflowOrder?.service_name}</p>
+              <p className="text-sm" style={{ color: L.text2 }}>for {workflowOrder?.customer_name}</p>
             </div>
 
             <div>
-              <Label className="text-white mb-2 block">Upload Proof of Service</Label>
+              <Label style={{ color: L.text, marginBottom: 8, display: 'block' }}>Upload Proof of Service</Label>
               <div className="grid grid-cols-3 gap-2 mb-2">
                 {proofImages.map((url, i) => (
                   <img key={i} src={url} alt="" className="w-full h-20 object-cover rounded-lg" />
                 ))}
                 <label className="h-20 rounded-lg border-dashed border-2 flex flex-col items-center justify-center cursor-pointer"
-                  style={{ borderColor: 'rgba(203,60,122,0.3)', background: 'rgba(255,255,255,0.03)' }}>
-                  {uploadingProof ? <div className="w-5 h-5 border-2 border-pink-400 border-t-transparent rounded-full animate-spin" /> : <Camera className="w-6 h-6" style={{ color: '#cb3c7a' }} />}
-                  <span className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Add Photo</span>
+                  style={{ borderColor: `${L.accent}30`, background: `${L.accent}05` }}>
+                  {uploadingProof ? <div className="w-5 h-5 border-2 border-2 border-r-transparent rounded-full animate-spin" style={{ borderColor: L.accent }} /> : <Camera className="w-6 h-6" style={{ color: L.accent }} />}
+                  <span className="text-xs mt-1" style={{ color: L.text3 }}>Add Photo</span>
                   <input type="file" accept="image/*" className="hidden" onChange={handleProofUpload} disabled={uploadingProof} />
                 </label>
               </div>
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" className="flex-1 text-white border-white/20" onClick={() => setWorkflowOrder(null)}>Cancel</Button>
+              <Button variant="outline" className="flex-1" style={{ color: L.text, borderColor: L.border }} onClick={() => setWorkflowOrder(null)}>Cancel</Button>
               <Button className="flex-1 text-white" style={{ background: '#10b981' }} onClick={completeWithProof}>
                 <CheckCircle2 className="w-4 h-4 mr-2" /> Mark Complete
               </Button>
@@ -675,10 +633,45 @@ export default function ProviderDashboard() {
       />
 
       {/* Edit Profile Dialog */}
-      <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
-        <DialogContent style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.3)' }} className="border max-h-[90vh] overflow-y-auto">
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent style={{ background: L.bg2, borderColor: L.border }} className="border">
           <DialogHeader>
-            <DialogTitle className="text-white">Edit Business Profile</DialogTitle>
+            <DialogTitle style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626' }}>
+              <AlertTriangle size={20} /> Delete Business Account
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div style={{ padding: 12, borderRadius: 12, background: '#fee2e2', border: '1px solid #fca5a5' }}>
+              <p style={{ color: '#b91c1c', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Warning: This action cannot be undone</p>
+              <p style={{ color: '#991b1b', fontSize: 13, lineHeight: 1.5 }}>
+                Deleting your business account will permanently remove your profile, services, order history, and all associated data from the platform.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" style={{ color: L.text, borderColor: L.border }} onClick={() => setShowDeleteConfirm(false)} disabled={deleteLoading}>Cancel</Button>
+              <Button className="flex-1 text-white" style={{ background: '#dc2626' }} onClick={async () => {
+                setDeleteLoading(true);
+                try {
+                  await callFunction('deleteProviderAccount', {});
+                  auth.logout();
+                } catch (err) {
+                  alert('Error deleting account: ' + err.message);
+                  setDeleteLoading(false);
+                }
+              }} disabled={deleteLoading}>
+                {deleteLoading ? 'Deleting...' : 'Delete Account'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
+        <DialogContent style={{ background: L.bg2, borderColor: L.border }} className="border max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle style={{ color: L.text }}>Edit Business Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {[
@@ -689,35 +682,35 @@ export default function ProviderDashboard() {
               { key: 'hourly_rate', label: 'Hourly Rate ($)', type: 'number' },
             ].map(({ key, label, type = 'text' }) => (
               <div key={key}>
-                <Label className="text-white">{label}</Label>
+                <Label style={{ color: L.text }}>{label}</Label>
                 <Input type={type} value={profileForm[key] || ''}
                   onChange={e => setProfileForm({ ...profileForm, [key]: e.target.value })}
-                  style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }} />
+                  style={{ background: L.bg, borderColor: L.border, color: L.text }} />
               </div>
             ))}
             <div>
-              <Label className="text-white">Description</Label>
+              <Label style={{ color: L.text }}>Description</Label>
               <Textarea value={profileForm.description || ''} rows={3}
                 onChange={e => setProfileForm({ ...profileForm, description: e.target.value })}
-                style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }} />
+                style={{ background: L.bg, borderColor: L.border, color: L.text }} />
             </div>
             <div>
-              <Label className="text-white mb-2 block">Availability</Label>
+              <Label style={{ color: L.text, marginBottom: 8, display: 'block' }}>Availability</Label>
               <div className="flex flex-wrap gap-2">
                 {DAYS.map(day => (
                   <button key={day} type="button" onClick={() => toggleDay(day)}
                     className="px-3 py-1.5 rounded-lg text-sm transition-all border"
                     style={{
-                      background: availabilityDays.includes(day) ? '#cb3c7a' : 'rgba(255,255,255,0.06)',
-                      borderColor: availabilityDays.includes(day) ? '#cb3c7a' : 'rgba(255,255,255,0.1)',
-                      color: availabilityDays.includes(day) ? '#fff' : 'rgba(255,255,255,0.6)'
+                      background: availabilityDays.includes(day) ? L.accent : L.bg,
+                      borderColor: availabilityDays.includes(day) ? L.accent : L.border,
+                      color: availabilityDays.includes(day) ? '#fff' : L.text2
                     }}>
                     {day.slice(0, 3)}
                   </button>
                 ))}
-              </div>
-            </div>
-            <Button className="w-full text-white" style={{ background: '#cb3c7a' }}
+                </div>
+                </div>
+                <Button className="w-full text-white" style={{ background: L.accent }}
               onClick={handleProfileSave} disabled={updateProviderMutation.isPending}>
               {updateProviderMutation.isPending ? 'Saving...' : 'Save Profile'}
             </Button>
@@ -729,20 +722,20 @@ export default function ProviderDashboard() {
 }
 
 function OrderCard({ order, actions, onChat }) {
-  const s = statusColors[order.status] || statusColors.pending;
-  return (
-    <Card style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
+   const s = statusColors[order.status] || statusColors.pending;
+   return (
+     <Card style={{ background: L.bg2, borderColor: L.border }} className="border">
       <CardContent className="p-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-mono text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{order.order_number}</span>
+              <span className="font-mono text-xs" style={{ color: L.text3 }}>{order.order_number}</span>
               <span className="text-xs font-semibold px-2.5 py-1 rounded-full capitalize" style={{ background: s.bg, color: s.text }}>
                 {order.status?.replace('_', ' ')}
               </span>
             </div>
-            <h4 className="font-semibold text-white">{order.service_name}</h4>
-            <div className="flex flex-wrap gap-3 mt-1 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
+            <h4 className="font-semibold" style={{ color: L.text }}>{order.service_name}</h4>
+            <div className="flex flex-wrap gap-3 mt-1 text-sm" style={{ color: L.text2 }}>
               <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" />{order.customer_name}</span>
               <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{order.scheduled_date} · {order.scheduled_time}</span>
               {order.address && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{order.address}</span>}
@@ -750,8 +743,8 @@ function OrderCard({ order, actions, onChat }) {
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className="text-right">
-              <p className="font-bold text-white">${order.subtotal?.toFixed(2)}</p>
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Net: ${((order.subtotal || 0) - (order.commission_amount || 0)).toFixed(2)}</p>
+              <p className="font-bold" style={{ color: L.text }}>${order.subtotal?.toFixed(2)}</p>
+              <p className="text-xs" style={{ color: L.text3 }}>Net: ${((order.subtotal || 0) - (order.commission_amount || 0)).toFixed(2)}</p>
             </div>
             {actions && <div className="flex gap-1.5">{actions}</div>}
           </div>
@@ -759,19 +752,19 @@ function OrderCard({ order, actions, onChat }) {
         <div className="mt-3 pt-3 border-t border-white/10 flex gap-2 flex-wrap">
           {order.customer_phone && (
             <a href={`tel:${order.customer_phone}`}>
-              <Button size="sm" variant="ghost" className="text-white/60 hover:text-white h-7 text-xs">
+                <Button size="sm" variant="ghost" style={{ color: L.text3 }} className="h-7 text-xs">
                 <Phone className="w-3.5 h-3.5 mr-1" /> Call
               </Button>
             </a>
           )}
           {onChat && (
-            <Button size="sm" variant="ghost" className="text-blue-400 hover:bg-blue-400/10 h-7 text-xs"
+            <Button size="sm" variant="ghost" style={{ color: L.blue }} className="h-7 text-xs"
               onClick={() => onChat(order)}>
               <MessageCircle className="w-3.5 h-3.5 mr-1" /> Chat
             </Button>
           )}
           {order.notes && (
-            <span className="text-xs self-center" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <span className="text-xs self-center" style={{ color: L.text3 }}>
               Note: {order.notes}
             </span>
           )}
@@ -783,10 +776,10 @@ function OrderCard({ order, actions, onChat }) {
 
 function EmptyState({ icon: Icon, message }) {
   return (
-    <Card style={{ background: '#140b00', borderColor: 'rgba(203,60,122,0.2)' }} className="border">
+    <Card style={{ background: L.bg2, borderColor: L.border }} className="border">
       <CardContent className="py-10 text-center">
-        <Icon className="w-10 h-10 opacity-20 mx-auto mb-3 text-white" />
-        <p style={{ color: 'rgba(255,255,255,0.5)' }}>{message}</p>
+        <Icon className="w-10 h-10 opacity-20 mx-auto mb-3" style={{ color: L.text3 }} />
+        <p style={{ color: L.text2 }}>{message}</p>
       </CardContent>
     </Card>
   );

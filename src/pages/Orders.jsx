@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { db, auth, invokeLLM, uploadFile } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Clock, CheckCircle2, MapPin, ChevronRight, XCircle, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Clock, MapPin, ChevronRight, XCircle, RotateCcw, ShoppingBag, Star, RefreshCw } from 'lucide-react';
+import usePullToRefresh from '@/hooks/usePullToRefresh';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import BookingModal from '@/components/booking/BookingModal';
+import ReviewSubmissionModal from '@/components/reviews/ReviewSubmissionModal';
+import { THEME as L } from '@/lib/theme';
+
+const STATUS_STYLES = {
+  pending:     { bg: '#fef3c7', color: '#d97706', label: 'Pending' },
+  confirmed:   { bg: '#eff3ff', color: '#4361EE', label: 'Confirmed' },
+  in_progress: { bg: '#f5f3ff', color: '#7C3AED', label: 'In Progress' },
+  completed:   { bg: '#ecfdf5', color: '#059669', label: 'Completed' },
+  cancelled:   { bg: '#fef2f2', color: '#dc2626', label: 'Cancelled' },
+};
 
 export default function Orders() {
   const [user, setUser] = useState(null);
@@ -18,210 +26,199 @@ export default function Orders() {
   const [rebookOrder, setRebookOrder] = useState(null);
   const [rebookService, setRebookService] = useState(null);
   const [rebookProvider, setRebookProvider] = useState(null);
+  const [reviewOrder, setReviewOrder] = useState(null);
+  const [tab, setTab] = useState('upcoming');
+  const [refreshing, setRefreshing] = useState(false);
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
+  useEffect(() => { auth.me().then(setUser).catch(() => {}); }, []);
 
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ['orders', user?.email],
-    queryFn: () => base44.entities.Order.filter({ customer_email: user?.email }, '-scheduled_date'),
+    queryFn: () => db.Order.filter({ customer_email: user?.email }, '-scheduled_date'),
     enabled: !!user?.email
   });
 
+  const { isPulling, pullDistance, isRefreshing } = usePullToRefresh(async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, 'main');
+
   const cancelMutation = useMutation({
     mutationFn: async (orderId) => {
-      await base44.entities.Order.update(orderId, { status: 'cancelled' });
+      await db.Order.update(orderId, { status: 'cancelled' });
       const order = orders.find(o => o.id === orderId);
       if (order) {
-        await base44.entities.Notification.create({
-          recipient_email: order.customer_email,
-          recipient_type: 'customer',
-          type: 'cancellation',
-          title: 'Booking Cancelled',
+        await db.Notification.create({
+          recipient_email: order.customer_email, recipient_type: 'customer',
+          type: 'cancellation', title: 'Booking Cancelled',
           message: `Your booking for ${order.service_name} has been cancelled.`,
-          order_id: orderId,
-          channels: ['email']
+          order_id: orderId, channels: ['email']
         });
       }
     },
-    onSuccess: () => {
-      toast.success('Booking cancelled');
-      setCancelOrderId(null);
-      queryClient.invalidateQueries({ queryKey: ['orders', user?.email] });
-    },
-    onError: () => toast.error('Failed to cancel booking')
+    onSuccess: () => { toast.success('Booking cancelled'); setCancelOrderId(null); queryClient.invalidateQueries({ queryKey: ['orders', user?.email] }); },
   });
 
   const handleRebook = async (order) => {
-    try {
-      const services = await base44.entities.Service.filter({ id: order.service_id });
-      const providers = await base44.entities.ServiceProvider.filter({ id: order.provider_id });
-      if (services[0] && providers[0]) {
-        setRebookService(services[0]);
-        setRebookProvider(providers[0]);
-        setRebookOrder(order);
-      } else {
-        toast.error('Service or provider no longer available');
-      }
-    } catch {
-      toast.error('Failed to load service details');
-    }
+    const [services, providers] = await Promise.all([
+      db.Service.filter({ id: order.service_id }),
+      db.ServiceProvider.filter({ id: order.provider_id }),
+    ]);
+    if (services[0] && providers[0]) {
+      setRebookService(services[0]); setRebookProvider(providers[0]); setRebookOrder(order);
+    } else toast.error('Service or provider no longer available');
   };
 
-  const upcomingOrders = orders.filter(o => ['pending', 'confirmed', 'in_progress'].includes(o.status));
-  const pastOrders = orders.filter(o => ['completed', 'cancelled'].includes(o.status));
-
-  const StatusBadge = ({ status }) => {
-    const styles = {
-      pending: { bg: '#fbbf24', text: '#000' },
-      confirmed: { bg: '#3b82f6', text: '#fff' },
-      in_progress: { bg: '#06b6d4', text: '#fff' },
-      completed: { bg: '#10b981', text: '#fff' },
-      cancelled: { bg: '#ef4444', text: '#fff' }
-    };
-    const style = styles[status] || styles.pending;
-    return (
-      <span className="text-xs font-semibold px-3 py-1 rounded-full capitalize" style={{ background: style.bg, color: style.text }}>
-        {status.replace('_', ' ')}
-      </span>
-    );
-  };
-
-  const OrderCard = ({ order }) => (
-    <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }} className="hover:border-pink-400/50 transition-colors">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <h3 className="text-white font-semibold text-lg">{order.service_name}</h3>
-            <p style={{ color: 'rgba(255,255,255,0.5)' }} className="text-sm">by {order.provider_name} · #{order.order_number}</p>
-          </div>
-          <StatusBadge status={order.status} />
-        </div>
-
-        <div className="space-y-1.5 mb-4 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" style={{ color: '#cb3c7a' }} />
-            {order.scheduled_date} at {order.scheduled_time}
-          </div>
-          {order.address && (
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" style={{ color: '#cb3c7a' }} />
-              {order.address}
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between pt-3 border-t border-white/10 gap-2">
-          <div>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Total</p>
-            <p className="text-white font-bold">${order.total_amount?.toFixed(2)}</p>
-          </div>
-          <div className="flex items-center gap-1 sm:gap-2">
-            {/* Rebook for completed/cancelled */}
-            {['completed', 'cancelled'].includes(order.status) && (
-              <Button size="sm" variant="ghost" className="text-blue-400 hover:bg-blue-400/10"
-                onClick={() => handleRebook(order)}>
-                <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                Rebook
-              </Button>
-            )}
-            {/* Cancel for upcoming */}
-            {['pending', 'confirmed'].includes(order.status) && (
-              <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-400/10"
-                onClick={() => setCancelOrderId(order.id)}>
-                <XCircle className="w-3.5 h-3.5 mr-1" />
-                Cancel
-              </Button>
-            )}
-            <Link to={createPageUrl(`OrderTracking?id=${order.id}`)}>
-              <Button size="sm" variant="ghost" className="text-pink-400 hover:bg-pink-400/10">
-                Track <ChevronRight className="w-4 h-4 ml-0.5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const upcoming = orders.filter(o => ['pending', 'confirmed', 'in_progress'].includes(o.status));
+  const past = orders.filter(o => ['completed', 'cancelled'].includes(o.status));
+  const shown = tab === 'upcoming' ? upcoming : past;
 
   return (
-    <div style={{ background: '#0f0900' }} className="min-h-screen py-6 sm:py-10">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8">My Orders</h1>
+    <div style={{ minHeight: '100vh', background: L.bg, color: L.text, padding: '48px 32px 80px', fontFamily: "'Inter', system-ui, sans-serif", position: 'relative' }}>
+      {/* Pull-to-Refresh Indicator */}
+      {(isPulling || isRefreshing) && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: Math.min(pullDistance, 80),
+          background: L.bg2,
+          borderBottom: `1px solid ${L.border}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 40,
+          transition: isRefreshing ? 'height 0.3s ease' : 'none',
+        }}>
+          <RefreshCw size={20} style={{ color: L.accent, animation: isRefreshing ? 'spin 0.6s linear infinite' : 'none' }} />
+        </div>
+      )}
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+
+        <div style={{ marginBottom: 32 }}>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', fontWeight: 700, letterSpacing: '-1.5px', marginBottom: 6, color: L.text }}>My Orders</h1>
+          <p style={{ fontSize: 14, color: L.text2, fontWeight: 300 }}>Track and manage your service bookings.</p>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'inline-flex', gap: 4, padding: 4, background: L.bg2, border: `1px solid ${L.border}`, borderRadius: 100, marginBottom: 28 }}>
+          {[{ k: 'upcoming', l: `Upcoming (${upcoming.length})` }, { k: 'past', l: `Past (${past.length})` }].map(t => (
+            <button key={t.k} onClick={() => setTab(t.k)}
+              style={{ padding: '9px 22px', borderRadius: 100, border: 'none', background: tab === t.k ? L.text : 'transparent', color: tab === t.k ? '#fff' : L.text2, fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s' }}>
+              {t.l}
+            </button>
+          ))}
+        </div>
 
         {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-36" />)}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-2xl" />)}
+          </div>
+        ) : shown.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {shown.map(order => {
+              const st = STATUS_STYLES[order.status] || STATUS_STYLES.pending;
+              return (
+                <div key={order.id}
+                  style={{ background: '#fff', border: `1px solid ${L.border}`, borderRadius: 20, padding: '20px 24px', transition: 'border-color 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = L.border2}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = L.border}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ fontWeight: 700, fontSize: 16, color: L.text, marginBottom: 2 }}>{order.service_name}</h3>
+                      <p style={{ fontSize: 12, color: L.text3 }}>by {order.provider_name} · #{order.order_number}</p>
+                    </div>
+                    <span style={{ padding: '4px 12px', borderRadius: 100, fontSize: 12, fontWeight: 700, background: st.bg, color: st.color, flexShrink: 0 }}>{st.label}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 13, color: L.text2, marginBottom: 16 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Clock size={13} style={{ color: L.accent }} />{order.scheduled_date} at {order.scheduled_time}</span>
+                    {order.address && <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><MapPin size={13} style={{ color: L.accent }} />{order.address}</span>}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 14, borderTop: `1px solid ${L.border}` }}>
+                    <div>
+                      <p style={{ fontSize: 11, color: L.text3, marginBottom: 2 }}>Total</p>
+                      <p style={{ fontWeight: 800, fontSize: 18, color: L.text }}>${order.total_amount?.toFixed(2)}</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      {order.status === 'completed' && (
+                        <button onClick={() => setReviewOrder(order)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 100, background: '#fffbeb', border: '1px solid #fde68a', color: '#d97706', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                          <Star size={12} /> Rate
+                        </button>
+                      )}
+                      {['completed', 'cancelled'].includes(order.status) && (
+                        <button onClick={() => handleRebook(order)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 100, background: '#eff3ff', border: '1px solid #c7d2fe', color: L.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                          <RotateCcw size={12} /> Rebook
+                        </button>
+                      )}
+                      {['pending', 'confirmed'].includes(order.status) && (
+                        <button onClick={() => setCancelOrderId(order.id)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 100, background: `${L.accent}10`, border: `1px solid ${L.accent}25`, color: L.accent, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                          <XCircle size={12} /> Cancel
+                        </button>
+                      )}
+                      <Link to={createPageUrl(`OrderTracking?id=${order.id}`)}>
+                        <button style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '7px 14px', borderRadius: 100, background: L.text, border: 'none', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                          Track <ChevronRight size={13} />
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
-          <Tabs defaultValue="upcoming" className="w-full">
-            <TabsList style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(203,60,122,0.2)' }} className="grid w-full grid-cols-2 border">
-              <TabsTrigger value="upcoming" className="text-white data-[state=active]:bg-pink-500/20">
-                Upcoming ({upcomingOrders.length})
-              </TabsTrigger>
-              <TabsTrigger value="past" className="text-white data-[state=active]:bg-pink-500/20">
-                Past ({pastOrders.length})
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="upcoming" className="space-y-4 mt-6">
-              {upcomingOrders.length > 0 ? (
-                upcomingOrders.map(order => <OrderCard key={order.id} order={order} />)
-              ) : (
-                <div className="text-center py-12">
-                  <p style={{ color: 'rgba(255,255,255,0.6)' }}>No upcoming bookings</p>
-                  <Link to={createPageUrl('Browse')}>
-                    <Button size="sm" style={{ background: '#cb3c7a' }} className="mt-4 text-white">Browse Services</Button>
-                  </Link>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="past" className="space-y-4 mt-6">
-              {pastOrders.length > 0 ? (
-                pastOrders.map(order => <OrderCard key={order.id} order={order} />)
-              ) : (
-                <div className="text-center py-12">
-                  <p style={{ color: 'rgba(255,255,255,0.6)' }}>No past bookings</p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+          <div style={{ textAlign: 'center', padding: '80px 24px', background: L.bg2, border: `1px solid ${L.border}`, borderRadius: 24 }}>
+            <ShoppingBag size={48} style={{ color: L.border2, margin: '0 auto 16px' }} />
+            <p style={{ fontWeight: 700, marginBottom: 8, color: L.text }}>No {tab} bookings</p>
+            <p style={{ fontSize: 14, color: L.text2, marginBottom: 20, fontWeight: 300 }}>
+              {tab === 'upcoming' ? 'Book a service to get started' : 'Your completed bookings will appear here'}
+            </p>
+            {tab === 'upcoming' && (
+              <Link to={createPageUrl('Browse')}>
+                <button style={{ padding: '10px 24px', borderRadius: 100, background: L.text, border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Browse Services</button>
+              </Link>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Cancel Confirmation Dialog */}
+      {/* Cancel dialog */}
       <Dialog open={!!cancelOrderId} onOpenChange={() => setCancelOrderId(null)}>
-        <DialogContent style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)' }}>
-          <DialogHeader>
-            <DialogTitle className="text-white">Cancel Booking?</DialogTitle>
-          </DialogHeader>
-          <p style={{ color: 'rgba(255,255,255,0.7)' }} className="text-sm">
-            Are you sure you want to cancel this booking? This action cannot be undone.
-          </p>
-          <div className="flex gap-3 mt-2">
-            <Button variant="outline" className="flex-1 text-white" onClick={() => setCancelOrderId(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Cancel Booking?</DialogTitle></DialogHeader>
+          <p style={{ color: L.text2, fontSize: 14 }}>Are you sure you want to cancel this booking? This action cannot be undone.</p>
+          <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+            <button onClick={() => setCancelOrderId(null)}
+              style={{ flex: 1, padding: '10px', borderRadius: 100, background: L.bg2, border: `1px solid ${L.border}`, color: L.text, fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
               Keep Booking
-            </Button>
-            <Button className="flex-1 text-white" style={{ background: '#ef4444' }}
-              disabled={cancelMutation.isPending}
-              onClick={() => cancelMutation.mutate(cancelOrderId)}>
+            </button>
+            <button onClick={() => cancelMutation.mutate(cancelOrderId)} disabled={cancelMutation.isPending}
+              style={{ flex: 1, padding: '10px', borderRadius: 100, background: L.accent, border: 'none', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
               {cancelMutation.isPending ? 'Cancelling...' : 'Yes, Cancel'}
-            </Button>
+            </button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Rebook Modal */}
       {rebookService && rebookProvider && (
-        <BookingModal
-          open={!!rebookOrder}
-          onClose={() => { setRebookOrder(null); setRebookService(null); setRebookProvider(null); }}
-          service={rebookService}
-          provider={rebookProvider}
-        />
+        <BookingModal open={!!rebookOrder} onClose={() => { setRebookOrder(null); setRebookService(null); setRebookProvider(null); }} service={rebookService} provider={rebookProvider} />
+      )}
+
+      {reviewOrder && (
+        <ReviewSubmissionModal open={!!reviewOrder} onClose={() => setReviewOrder(null)} order={reviewOrder}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['orders', user?.email] })} />
       )}
     </div>
   );

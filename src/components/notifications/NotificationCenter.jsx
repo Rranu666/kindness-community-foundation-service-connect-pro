@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db, auth, invokeLLM, uploadFile } from '@/api/db';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Bell, Check, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,14 +23,14 @@ export default function NotificationCenter() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    auth.me().then(setUser).catch(() => {});
   }, []);
 
   const { data: notifications = [], isLoading, refetch } = useQuery({
     queryKey: ['notifications', user?.email],
     queryFn: () => {
       if (!user?.email) return [];
-      return base44.entities.Notification.filter(
+      return db.Notification.filter(
         { recipient_email: user.email },
         '-created_date'
       );
@@ -41,13 +41,13 @@ export default function NotificationCenter() {
 
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId) => 
-      base44.entities.Notification.update(notificationId, { is_read: true }),
+      db.Notification.update(notificationId, { is_read: true }),
     onSuccess: () => refetch()
   });
 
   const deleteNotificationMutation = useMutation({
     mutationFn: (notificationId) => 
-      base44.entities.Notification.delete(notificationId),
+      db.Notification.delete(notificationId),
     onSuccess: () => refetch()
   });
 

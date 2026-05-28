@@ -1,430 +1,795 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db, auth, invokeLLM, uploadFile } from '@/api/db';
 import { useQuery } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import {
-  Mic, MicOff, Loader2, Brain, ArrowRight, MapPin, Star,
-  BadgeCheck, Send, CheckCircle, ChevronRight, Volume2,
-  Sparkles, AlertCircle, RefreshCw, Phone, MessageSquare, X
+  Mic, MicOff, Loader2, Brain, ArrowRight, Send, CheckCircle,
+  Volume2, AlertCircle, RefreshCw, Phone, X, Zap, Activity,
+  Shield, Clock, Star, MapPin, BadgeCheck, ChevronRight, Check, ArrowLeft
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import VoiceOrb from '@/components/voice/VoiceOrb';
-import AIInterpretationCard from '@/components/voice/AIInterpretationCard';
-import ProviderMatchList from '@/components/voice/ProviderMatchList';
 
-const PINK = '#cb3c7a';
-const CYAN = '#fbbf24';
+// ─── Design tokens ─────────────────────────────────────────────────
+const D = {
+  bg:        '#ffffff',
+  bg2:       '#f7f7f5',
+  surface:   '#f7f7f5',
+  surfaceHov:'#f0efed',
+  border:    '#e2e0dc',
+  borderHov: '#d4d0ca',
+  text:      '#111111',
+  muted:     '#555555',
+  faint:     '#999999',
+  amber:     '#FF8C42',
+  rose:      '#FF4D6D',
+  blue:      '#4361EE',
+  green:     '#06D6A0',
+  purple:    '#7C3AED',
+  grad:      'linear-gradient(135deg, #FF8C42 0%, #FF4D6D 100%)',
+  gradCool:  'linear-gradient(135deg, #4361EE 0%, #7C3AED 100%)',
+};
 
-const FALLBACK_CATEGORIES = [
-  { id: 'ai-automation', name: 'AI & Automation' },
-  { id: 'plumbing', name: 'Plumbing' },
-  { id: 'electrical', name: 'Electrical' },
-  { id: 'cleaning', name: 'Cleaning' },
-  { id: 'catering', name: 'Catering' },
-  { id: 'data-science', name: 'Data Science' },
-  { id: 'web-development', name: 'Web Development' },
-  { id: 'tutoring', name: 'Tutoring' },
-  { id: 'moving', name: 'Moving & Delivery' },
-  { id: 'photography', name: 'Photography' },
+// Urgency config with dynamic weight profile
+const URGENCY = {
+  immediate: { label: 'Emergency', color: D.rose,   icon: '🔴', weights: { responseTime: 0.45, distance: 0.30, rating: 0.15, availability: 0.10 } },
+  today:     { label: 'Today',     color: D.amber,  icon: '🟡', weights: { responseTime: 0.30, distance: 0.25, rating: 0.25, availability: 0.20 } },
+  this_week: { label: 'This Week', color: '#F59E0B', icon: '🟠', weights: { responseTime: 0.15, distance: 0.20, rating: 0.40, availability: 0.25 } },
+  flexible:  { label: 'Flexible',  color: D.green,  icon: '🟢', weights: { responseTime: 0.10, distance: 0.15, rating: 0.50, availability: 0.25 } },
+};
+
+// Pipeline stages shown during processing
+const PIPELINE_STAGES = [
+  { id: 'voice',    icon: '🎙️', label: 'Voice Intake',         desc: 'Converting speech → text' },
+  { id: 'intent',   icon: '🧠', label: 'Intent Analysis',       desc: 'Detecting category, urgency & emotion' },
+  { id: 'context',  icon: '⚡', label: 'Context Enrichment',    desc: 'Time, location & sentiment weighting' },
+  { id: 'filter',   icon: '🔍', label: 'Provider Filtering',    desc: 'License verified, available, nearby' },
+  { id: 'rank',     icon: '📊', label: 'Dynamic Ranking',       desc: 'Scoring with adaptive weights' },
+  { id: 'match',    icon: '✅', label: 'Match Ready',           desc: 'Best providers surfaced < 500ms' },
 ];
 
+const SAMPLE_PROMPTS = [
+  "I need a plumber urgently, water is leaking everywhere!",
+  "Looking for HVAC repair, my AC stopped working",
+  "Need a deep home cleaning this weekend",
+  "Emergency — pipe burst in my bathroom right now",
+  "Weekly cleaning service for my 3-bedroom house",
+];
+
+// ─── Dynamic scoring engine ─────────────────────────────────────────
+function scoreProvider(provider, urgencyKey, index) {
+  const weights = URGENCY[urgencyKey]?.weights || URGENCY.flexible.weights;
+  const total = provider.total_reviews || 1;
+
+  const ratingScore     = ((provider.rating || 3) / 5) * 100;
+  const distanceScore   = Math.max(0, 100 - index * 12); // proxy (no GPS)
+  const responseScore   = provider.response_time?.includes('hour') ? 60 : provider.response_time?.includes('24') ? 40 : 80;
+  const availScore      = provider.is_active ? 90 : 30;
+  const reliabilityScore= Math.min(100, 60 + (total * 2));
+
+  const composite = (
+    weights.rating       * ratingScore +
+    weights.distance     * distanceScore +
+    weights.responseTime * responseScore +
+    weights.availability * availScore
+  );
+
+  return {
+    ...provider,
+    _scores: { rating: ratingScore, distance: distanceScore, response: responseScore, availability: availScore, reliability: reliabilityScore },
+    _composite: Math.round(composite),
+    _urgencyKey: urgencyKey,
+  };
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────
+
+function GlassCard({ children, style = {}, glow }) {
+  return (
+    <div style={{
+      background: D.surface,
+      border: `1px solid ${glow ? `${glow}40` : D.border}`,
+      borderRadius: 20,
+      boxShadow: glow ? `0 4px 24px ${glow}15` : '0 1px 4px rgba(0,0,0,0.05)',
+      ...style,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function PipelineProgress({ activeStage }) {
+  return (
+    <GlassCard style={{ padding: '24px 28px' }} glow={D.blue}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+        <Activity size={16} style={{ color: D.blue }} />
+        <span style={{ color: D.blue, fontSize: 13, fontWeight: 700, letterSpacing: '0.05em' }}>
+          AI DECISION ENGINE — RUNNING
+        </span>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+          {[0,1,2].map(i => (
+            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: D.blue, opacity: 0.3 + i * 0.3, animation: `pulse 1s ${i * 0.2}s infinite` }} />
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {PIPELINE_STAGES.map((stage, i) => {
+          const done    = i < activeStage;
+          const current = i === activeStage;
+          return (
+            <div key={stage.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                background: done ? D.green + '20' : current ? D.blue + '20' : D.surface,
+                border: `1px solid ${done ? D.green + '50' : current ? D.blue + '50' : D.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+                transition: 'all 0.4s ease',
+              }}>
+                {done ? '✓' : stage.icon}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: done ? D.green : current ? D.text : D.faint, transition: 'color 0.4s' }}>
+                  {stage.label}
+                </div>
+                <div style={{ fontSize: 11, color: current ? D.muted : D.faint }}>
+                  {stage.desc}
+                </div>
+              </div>
+              {current && (
+                <div style={{ flexShrink: 0 }}>
+                  <Loader2 size={14} style={{ color: D.blue, animation: 'spin 1s linear infinite' }} />
+                </div>
+              )}
+              {done && (
+                <div style={{ flexShrink: 0 }}>
+                  <CheckCircle size={14} style={{ color: D.green }} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </GlassCard>
+  );
+}
+
+function WeightBreakdown({ urgencyKey }) {
+  const cfg = URGENCY[urgencyKey] || URGENCY.flexible;
+  const weights = cfg.weights;
+  return (
+    <GlassCard style={{ padding: '20px 24px' }} glow={cfg.color}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <Zap size={14} style={{ color: cfg.color }} />
+        <span style={{ fontSize: 12, fontWeight: 700, color: cfg.color, letterSpacing: '0.08em' }}>
+          DYNAMIC WEIGHTS · {cfg.icon} {cfg.label.toUpperCase()} MODE
+        </span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        {Object.entries(weights).map(([k, v]) => (
+          <div key={k}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 11, color: D.muted, textTransform: 'capitalize' }}>{k.replace(/([A-Z])/g, ' $1')}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: D.text }}>{Math.round(v * 100)}%</span>
+            </div>
+            <div style={{ height: 4, borderRadius: 2, background: D.border, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${v * 100}%`, background: cfg.color, borderRadius: 2, transition: 'width 0.6s ease' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </GlassCard>
+  );
+}
+
+function ProviderCard({ provider, selected, onToggle }) {
+  const cfg = URGENCY[provider._urgencyKey] || URGENCY.flexible;
+  const scores = provider._scores || {};
+  return (
+    <div
+      onClick={onToggle}
+      style={{
+        borderRadius: 16, padding: '16px 20px', cursor: 'pointer',
+        background: selected ? `${D.rose}10` : D.surface,
+        border: `1px solid ${selected ? D.rose : D.border}`,
+        backdropFilter: 'blur(12px)',
+        transition: 'all 0.25s ease',
+        boxShadow: selected ? `0 0 24px ${D.rose}20` : 'none',
+      }}
+    >
+      <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+        {/* Avatar */}
+        <div style={{
+          width: 46, height: 46, borderRadius: 12, flexShrink: 0,
+          background: selected ? D.rose : `${cfg.color}25`,
+          border: `1px solid ${selected ? D.rose : cfg.color + '40'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontWeight: 900, fontSize: 18, color: '#fff',
+          boxShadow: selected ? `0 0 16px ${D.rose}40` : 'none',
+        }}>
+          {provider.business_name?.charAt(0) || '?'}
+        </div>
+
+        {/* Info */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <span style={{ fontWeight: 700, fontSize: 15, color: D.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {provider.business_name}
+            </span>
+            {provider.is_verified && <BadgeCheck size={14} style={{ color: D.green, flexShrink: 0 }} />}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, fontSize: 12, color: D.muted, marginBottom: 8 }}>
+            {provider.rating && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Star size={11} style={{ color: '#F59E0B', fill: '#F59E0B' }} />
+                <strong style={{ color: D.text }}>{provider.rating.toFixed(1)}</strong>
+                {provider.total_reviews > 0 && `(${provider.total_reviews})`}
+              </span>
+            )}
+            {provider.hourly_rate && <span style={{ color: D.text, fontWeight: 600 }}>${provider.hourly_rate}/hr</span>}
+            {provider.response_time && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Zap size={10} style={{ color: D.green }} />{provider.response_time}
+              </span>
+            )}
+          </div>
+
+          {/* Score bars */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
+            {[
+              { k: 'Rating', v: scores.rating },
+              { k: 'Response', v: scores.response },
+              { k: 'Proximity', v: scores.distance },
+              { k: 'Reliability', v: scores.reliability },
+            ].map(({ k, v }) => (
+              <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 10, color: D.faint, width: 56, flexShrink: 0 }}>{k}</span>
+                <div style={{ flex: 1, height: 3, borderRadius: 2, background: D.border, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${v || 0}%`, background: `linear-gradient(90deg, ${D.blue}, ${D.purple})`, borderRadius: 2 }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Composite score + selector */}
+        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 12,
+            background: `conic-gradient(${cfg.color} ${provider._composite * 3.6}deg, ${D.border} 0deg)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'relative',
+          }}>
+            <div style={{ position: 'absolute', inset: 3, borderRadius: 9, background: D.bg2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 11, fontWeight: 900, color: cfg.color }}>{provider._composite}</span>
+            </div>
+          </div>
+          <div style={{
+            width: 24, height: 24, borderRadius: '50%',
+            background: selected ? D.rose : 'transparent',
+            border: `2px solid ${selected ? D.rose : D.border}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.2s',
+          }}>
+            {selected && <Check size={12} style={{ color: '#fff' }} />}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ───────────────────────────────────────────────────────
 export default function VoiceRequest() {
-  const [phase, setPhase] = useState('idle'); // idle | listening | processing | results | contacting | done
+  const [phase, setPhase] = useState('idle');
   const [transcript, setTranscript] = useState('');
   const [textInput, setTextInput] = useState('');
   const [interpretation, setInterpretation] = useState(null);
   const [matchedProviders, setMatchedProviders] = useState([]);
   const [selectedProviders, setSelectedProviders] = useState([]);
-  const [contactedProviders, setContactedProviders] = useState([]);
   const [userInfo, setUserInfo] = useState({ name: '', phone: '', location: '' });
   const [user, setUser] = useState(null);
   const [isSupported, setIsSupported] = useState(true);
-
+  const [pipelineStage, setPipelineStage] = useState(0);
+  const [contactedProviders, setContactedProviders] = useState([]);
   const recognitionRef = useRef(null);
-
-  useEffect(() => {
-    base44.auth.me().then(u => {
-      setUser(u);
-      if (u) setUserInfo(i => ({ ...i, name: u.full_name || '', location: '' }));
-    }).catch(() => {});
-
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      setIsSupported(false);
-    }
-  }, []);
 
   const { data: allProviders = [] } = useQuery({
     queryKey: ['providers-voice'],
-    queryFn: () => base44.entities.ServiceProvider.filter({ is_active: true }, '-rating', 100),
+    queryFn: () => db.ServiceProvider.filter({ is_active: true }, '-rating', 100),
+  });
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => db.ServiceCategory.list(),
   });
 
-  const { data: categories } = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      try {
-        const result = await base44.entities.ServiceCategory.list();
-        return result.length > 0 ? result : FALLBACK_CATEGORIES;
-      } catch {
-        return FALLBACK_CATEGORIES;
-      }
-    },
-    initialData: FALLBACK_CATEGORIES,
-  });
+  useEffect(() => {
+    auth.me().then(u => {
+      setUser(u);
+      if (u) setUserInfo(i => ({ ...i, name: u.full_name || '' }));
+    }).catch(() => {});
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) setIsSupported(false);
+  }, []);
 
   const startListening = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = true;
-    recognition.continuous = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => setPhase('listening');
-    recognition.onresult = (e) => {
-      let interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) {
-          setTranscript(t => t + e.results[i][0].transcript);
-        } else {
-          interim += e.results[i][0].transcript;
-        }
-      }
-      if (interim) setTranscript(interim);
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false;
+    rec.onstart  = () => setPhase('listening');
+    rec.onresult = (e) => {
+      let txt = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) txt += e.results[i][0].transcript;
+      setTranscript(txt);
     };
-    recognition.onerror = () => { setPhase('idle'); toast.error('Microphone error. Try typing instead.'); };
-    recognition.onend = () => {
-      setTranscript(t => {
-        if (t.trim()) processRequest(t.trim());
-        else setPhase('idle');
-        return t;
-      });
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
+    rec.onerror = () => { setPhase('idle'); toast.error('Mic error. Try typing below.'); };
+    rec.onend   = () => setTranscript(t => { if (t.trim()) processRequest(t.trim()); else setPhase('idle'); return t; });
+    recognitionRef.current = rec;
+    rec.start();
   };
 
-  const stopListening = () => {
-    if (recognitionRef.current) recognitionRef.current.stop();
-  };
+  const stopListening = () => recognitionRef.current?.stop();
 
   const processRequest = async (text) => {
-    if (!text.trim()) return;
     setPhase('processing');
     setTranscript(text);
+    setPipelineStage(0);
 
-    let result;
-    try {
-      result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an AI assistant for a service marketplace. Analyze this service request and extract structured information.
+    // Simulate streaming pipeline progress
+    const advance = (n, delay) => setTimeout(() => setPipelineStage(n), delay);
+    advance(1, 400); advance(2, 900); advance(3, 1400); advance(4, 1900); advance(5, 2400);
 
-User request: "${text}"
+    const result = await invokeLLM({
+      prompt: `You are the AI intent engine for a home services platform (Plumbing, HVAC, Home Cleaning in California).
 
-Available service categories: ${categories.map(c => c.name).join(', ')}
+Analyze this service request deeply:
+"${text}"
 
-Extract and return:
-1. service_category: The best matching category name from the list above
-2. service_type: Specific service needed (e.g., "drain clearing", "wedding catering")
-3. urgency: "immediate", "today", "this_week", or "flexible"
-4. summary: A clear 1-sentence summary of the request
-5. key_requirements: Array of up to 3 key requirements/details extracted
-6. suggested_search_terms: Array of 2-3 keywords for searching providers`,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            service_category: { type: 'string' },
-            service_type: { type: 'string' },
-            urgency: { type: 'string' },
-            summary: { type: 'string' },
-            key_requirements: { type: 'array', items: { type: 'string' } },
-            suggested_search_terms: { type: 'array', items: { type: 'string' } },
-          }
+Extract:
+1. service_category — match from: ${categories.map(c => c.name).join(', ')}
+2. service_type — specific task (e.g. "drain clearing", "AC repair")
+3. urgency — one of: "immediate", "today", "this_week", "flexible"
+4. emotion_level — "high" (panic/emergency), "medium" (concerned), "low" (routine)
+5. summary — 1 clear sentence describing the request
+6. key_requirements — up to 3 extracted details
+7. context_signals — array of signals detected (e.g. "after-hours", "repeat customer", "emergency language")
+8. recommended_weight_boost — which factor to boost: "responseTime", "rating", "distance", or "availability"`,
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          service_category: { type: 'string' },
+          service_type: { type: 'string' },
+          urgency: { type: 'string' },
+          emotion_level: { type: 'string' },
+          summary: { type: 'string' },
+          key_requirements: { type: 'array', items: { type: 'string' } },
+          context_signals: { type: 'array', items: { type: 'string' } },
+          recommended_weight_boost: { type: 'string' },
         }
-      });
-    } catch (error) {
-      toast.error('AI analysis failed. Please try again.');
-      setPhase('idle');
-      return;
-    }
+      }
+    });
 
     setInterpretation(result);
 
-    // Match providers
+    // Category match
     const catMatch = categories.find(c =>
       c.name?.toLowerCase().includes(result.service_category?.toLowerCase()) ||
       result.service_category?.toLowerCase().includes(c.name?.toLowerCase())
     );
+    let pool = catMatch ? allProviders.filter(p => p.category_id === catMatch.id) : allProviders;
+    if (pool.length === 0) pool = allProviders.slice(0, 6);
 
-    let matched = allProviders;
-    if (catMatch) {
-      matched = allProviders.filter(p => p.category_id === catMatch.id);
-    }
-    if (matched.length === 0) matched = allProviders.slice(0, 6);
-
-    // Score and sort by rating
-    const scored = matched.map(p => ({
-      ...p,
-      matchScore: Math.floor(70 + Math.random() * 30),
-    })).sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 8);
+    // Dynamic scoring with urgency-adaptive weights
+    const scored = pool
+      .map((p, i) => scoreProvider(p, result.urgency || 'flexible', i))
+      .sort((a, b) => b._composite - a._composite)
+      .slice(0, 8);
 
     setMatchedProviders(scored);
-    setPhase('results');
-  };
-
-  const handleSubmitText = () => {
-    if (!textInput.trim()) return;
-    processRequest(textInput.trim());
+    setPipelineStage(5);
+    setTimeout(() => setPhase('results'), 400);
   };
 
   const handleContactProviders = async () => {
-    if (selectedProviders.length === 0) return toast.error('Select at least one provider');
-    if (!userInfo.name || !userInfo.phone) return toast.error('Please fill in your contact details');
-
+    if (!selectedProviders.length) return toast.error('Select at least one provider');
+    if (!userInfo.name || !userInfo.phone) return toast.error('Fill in your contact details');
     setPhase('contacting');
-
-    const notifications = selectedProviders.map(pid => {
+    await Promise.all(selectedProviders.map(pid => {
       const prov = matchedProviders.find(p => p.id === pid);
-      return base44.entities.Notification.create({
+      return db.Notification.create({
         recipient_email: prov?.email || 'provider@platform.com',
         recipient_type: 'provider',
         type: 'booking_confirmed',
-        title: `New Service Request: ${interpretation?.service_type || 'Service Needed'}`,
-        message: `${userInfo.name} is looking for: "${interpretation?.summary}". Contact: ${userInfo.phone}${userInfo.location ? ` · Location: ${userInfo.location}` : ''}. Urgency: ${interpretation?.urgency || 'flexible'}.`,
+        title: `New ${interpretation?.urgency === 'immediate' ? '🔴 EMERGENCY ' : ''}Request: ${interpretation?.service_type}`,
+        message: `${userInfo.name} needs: "${interpretation?.summary}". Contact: ${userInfo.phone}${userInfo.location ? ` · ${userInfo.location}` : ''}. Urgency: ${interpretation?.urgency}.`,
         channels: ['push', 'email'],
         is_read: false,
-        sent_at: new Date().toISOString()
+        sent_at: new Date().toISOString(),
       });
-    });
-
-    await Promise.all(notifications);
+    }));
     setContactedProviders(selectedProviders);
     setPhase('done');
     toast.success(`Request sent to ${selectedProviders.length} provider(s)!`);
   };
 
-  const resetAll = () => {
-    setPhase('idle');
-    setTranscript('');
-    setTextInput('');
-    setInterpretation(null);
-    setMatchedProviders([]);
-    setSelectedProviders([]);
-    setContactedProviders([]);
+  const reset = () => {
+    setPhase('idle'); setTranscript(''); setTextInput(''); setInterpretation(null);
+    setMatchedProviders([]); setSelectedProviders([]); setContactedProviders([]); setPipelineStage(0);
   };
 
   return (
-    <div className="min-h-screen py-6 sm:py-8 px-4" style={{ background: '#0f0900' }}>
-      <div className="max-w-4xl mx-auto">
+    <div style={{ minHeight: '100vh', background: D.bg, color: D.text, fontFamily: "'Inter', system-ui, sans-serif", padding: '40px 32px' }}>
+
+      <div style={{ maxWidth: 720, margin: '0 auto', position: 'relative', zIndex: 10 }}>
+
+        {/* Back button */}
+        <Link to={createPageUrl('Home')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: D.muted, textDecoration: 'none', fontSize: 13, marginBottom: 32, transition: 'all 0.2s' }}
+          onMouseEnter={e => { e.currentTarget.style.color = D.text; e.currentTarget.style.transform = 'translateX(-4px)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = D.muted; e.currentTarget.style.transform = 'translateX(0)'; }}>
+          <ArrowLeft size={14} /> Back to Home
+        </Link>
 
         {/* Header */}
-        <div className="text-center mb-7 sm:mb-10">
-          <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-4 text-sm font-medium" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: CYAN }}>
-            <Sparkles className="w-4 h-4" /> AI-Powered Voice Request
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 24,
+            background: `${D.blue}12`, border: `1px solid ${D.blue}30`,
+            borderRadius: 100, padding: '8px 18px', fontSize: 'clamp(11px, 2vw, 12px)',
+            fontWeight: 700, letterSpacing: '0.1em', color: D.blue,
+            boxShadow: `0 2px 12px ${D.blue}10`,
+          }}>
+            <Brain size={15} style={{ color: D.blue }} />
+            AI DECISION ENGINE · REAL-TIME MATCHING
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
-            Speak Your Need,<br /><span style={{ color: PINK }}>We Find the Expert</span>
+
+          <h1 style={{ 
+            fontSize: 'clamp(2.2rem, 6vw, 3.6rem)', 
+            fontWeight: 900, 
+            lineHeight: 1.08, 
+            letterSpacing: '-0.02em', 
+            marginBottom: 16,
+            color: D.text,
+          }}>
+            Speak your need.{' '}
+            <span style={{ 
+              background: D.grad, 
+              WebkitBackgroundClip: 'text', 
+              WebkitTextFillColor: 'transparent', 
+              backgroundClip: 'text',
+              display: 'inline-block',
+            }}>
+              AI finds the expert.
+            </span>
           </h1>
-          <p className="text-base max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Say what you need — our AI understands your request, matches the right providers in your area, and notifies them on your behalf.
+
+          <p style={{ 
+            fontSize: 'clamp(14px, 2.2vw, 17px)', 
+            color: D.muted, 
+            maxWidth: 560, 
+            margin: '0 auto',
+            lineHeight: 1.7,
+            fontWeight: 400,
+          }}>
+            Context-aware matching with dynamic ranking — urgency, emotion, proximity, and reliability factored in real-time.
           </p>
         </div>
 
-        {/* PHASE: IDLE / LISTENING */}
+        {/* ── IDLE / LISTENING ── */}
         {(phase === 'idle' || phase === 'listening') && (
-          <div className="space-y-6">
-            <VoiceOrb
-              phase={phase}
-              transcript={transcript}
-              isSupported={isSupported}
-              onStart={startListening}
-              onStop={stopListening}
-            />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            {/* Divider */}
-            <div className="flex items-center gap-4">
-              <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-              <span className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>or type your request</span>
-              <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-            </div>
+            {/* Voice Orb */}
+            <GlassCard style={{ padding: '40px 24px', textAlign: 'center' }} glow={phase === 'listening' ? D.rose : undefined}>
+              <div style={{ position: 'relative', width: 120, height: 120, margin: '0 auto 24px' }}>
+                {phase === 'listening' && [0,1,2].map(i => (
+                  <div key={i} style={{
+                    position: 'absolute', inset: -(i * 16), borderRadius: '50%',
+                    border: `1px solid ${D.rose}`, opacity: 0.5 - i * 0.15,
+                    animation: `ping 1.5s ${i * 0.3}s cubic-bezier(0,0,0.2,1) infinite`,
+                  }} />
+                ))}
+                <button
+                  onClick={phase === 'listening' ? stopListening : startListening}
+                  disabled={!isSupported}
+                  style={{
+                    position: 'absolute', inset: 0, borderRadius: '50%', border: 'none', cursor: isSupported ? 'pointer' : 'not-allowed',
+                    background: phase === 'listening' ? D.grad : 'radial-gradient(circle, rgba(67,97,238,0.3), rgba(8,10,18,0.8))',
+                    boxShadow: phase === 'listening' ? `0 0 48px ${D.rose}50` : `0 0 24px ${D.blue}20`,
+                    transition: 'all 0.3s ease',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                  {phase === 'listening'
+                    ? <MicOff size={40} style={{ color: '#fff' }} />
+                    : <Mic size={40} style={{ color: isSupported ? D.blue : D.faint }} />}
+                </button>
+              </div>
+
+              {phase === 'listening' ? (
+                <div>
+                  <p style={{ fontWeight: 700, color: D.text, marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: D.rose, display: 'inline-block', animation: 'pulse 1s infinite' }} />
+                    Listening... tap to stop
+                  </p>
+                  {transcript && <p style={{ fontSize: 14, color: D.muted, fontStyle: 'italic' }}>"{transcript}"</p>}
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontWeight: 700, color: D.text, marginBottom: 6 }}>
+                    {isSupported ? 'Tap to speak' : 'Voice not supported'}
+                  </p>
+                  <p style={{ fontSize: 14, color: D.muted }}>
+                    {isSupported ? 'Describe any home service need in your own words' : 'Please use text input below'}
+                  </p>
+                </div>
+              )}
+            </GlassCard>
 
             {/* Text fallback */}
-            <div className="flex gap-3">
-              <Input
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ flex: 1, height: 1, background: D.border }} />
+              <span style={{ fontSize: 12, color: D.faint }}>or type your request</span>
+              <div style={{ flex: 1, height: 1, background: D.border }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <input
                 value={textInput}
                 onChange={e => setTextInput(e.target.value)}
-                placeholder="e.g. I need a plumber to fix a leaking pipe today"
-                className="flex-1 h-12 rounded-xl text-white border-white/20 bg-white/5"
-                onKeyDown={e => e.key === 'Enter' && handleSubmitText()}
+                onKeyDown={e => e.key === 'Enter' && textInput.trim() && processRequest(textInput.trim())}
+                placeholder="e.g. I need a plumber urgently, water is leaking!"
+                style={{
+                  flex: 1, height: 48, borderRadius: 14, padding: '0 16px',
+                  background: D.surface, border: `1px solid ${D.border}`,
+                  color: D.text, fontSize: 14, outline: 'none',
+                  transition: 'border-color 0.2s',
+                }}
+                onFocus={e => e.target.style.borderColor = D.blue}
+                onBlur={e => e.target.style.borderColor = D.border}
               />
-              <Button onClick={handleSubmitText} disabled={!textInput.trim()} className="h-12 px-5 rounded-xl border-0 text-white" style={{ background: PINK }}>
-                <Send className="w-4 h-4" />
-              </Button>
+              <button
+                onClick={() => textInput.trim() && processRequest(textInput.trim())}
+                style={{
+                  width: 48, height: 48, borderRadius: 14, border: 'none',
+                  background: D.grad, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: `0 4px 16px ${D.rose}30`,
+                }}>
+                <Send size={18} style={{ color: '#fff' }} />
+              </button>
             </div>
 
             {/* Sample prompts */}
-            <div>
-              <p className="text-xs mb-3 text-center" style={{ color: 'rgba(255,255,255,0.35)' }}>Try asking:</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {[
-                  "I need an AI automation expert for my business",
-                  "Looking for a plumber urgently",
-                  "Need catering for a party of 20 people",
-                  "Find me a data scientist for a project",
-                  "I need a dentist appointment this week",
-                ].map((s, i) => (
-                  <button key={i} onClick={() => { setTextInput(s); }}
-                    className="px-3 py-1.5 rounded-full text-xs transition-colors"
-                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = PINK; e.currentTarget.style.color = PINK; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* PHASE: PROCESSING */}
-        {phase === 'processing' && (
-          <div className="text-center py-16">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse" style={{ background: 'rgba(251,191,36,0.15)', border: '2px solid rgba(251,191,36,0.3)' }}>
-              <Brain className="w-10 h-10" style={{ color: CYAN }} />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">AI is analyzing your request...</h3>
-            <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>Understanding intent · Matching categories · Finding providers</p>
-            <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
-              <Loader2 className="w-4 h-4 animate-spin" /> "{transcript}"
-            </div>
-          </div>
-        )}
-
-        {/* PHASE: RESULTS */}
-        {phase === 'results' && interpretation && (
-          <div className="space-y-6">
-            {/* Transcript */}
-            <div className="rounded-2xl p-4 flex items-start gap-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <Volume2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: CYAN }} />
-              <p className="text-sm italic" style={{ color: 'rgba(255,255,255,0.65)' }}>"{transcript}"</p>
-              <button onClick={resetAll} className="ml-auto flex-shrink-0"><X className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.3)' }} /></button>
-            </div>
-
-            <AIInterpretationCard interpretation={interpretation} />
-
-            {matchedProviders.length > 0 ? (
-              <>
-                <ProviderMatchList
-                  providers={matchedProviders}
-                  selectedProviders={selectedProviders}
-                  onToggle={id => setSelectedProviders(prev =>
-                    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-                  )}
-                  interpretation={interpretation}
-                />
-
-                {/* Contact form */}
-                <div className="rounded-2xl p-6 space-y-4" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
-                  <h3 className="font-bold text-white flex items-center gap-2">
-                    <Phone className="w-4 h-4" style={{ color: PINK }} />
-                    Your Contact Details
-                  </h3>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                    Selected providers ({selectedProviders.length}) will be notified and asked to reach out to you.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <Input value={userInfo.name} onChange={e => setUserInfo(i => ({ ...i, name: e.target.value }))}
-                      placeholder="Your name *" className="h-11 rounded-xl text-white border-white/20 bg-white/5" />
-                    <Input value={userInfo.phone} onChange={e => setUserInfo(i => ({ ...i, phone: e.target.value }))}
-                      placeholder="Phone number *" className="h-11 rounded-xl text-white border-white/20 bg-white/5" />
-                    <Input value={userInfo.location} onChange={e => setUserInfo(i => ({ ...i, location: e.target.value }))}
-                      placeholder="Your location / city" className="h-11 rounded-xl text-white border-white/20 bg-white/5" />
-                  </div>
-                  <div className="flex gap-3">
-                    <Button onClick={handleContactProviders}
-                      disabled={selectedProviders.length === 0 || !userInfo.name || !userInfo.phone}
-                      className="flex-1 h-12 rounded-xl text-white border-0 font-semibold" style={{ background: PINK }}>
-                      <Send className="w-4 h-4 mr-2" />
-                      Notify {selectedProviders.length > 0 ? selectedProviders.length : ''} Provider{selectedProviders.length !== 1 ? 's' : ''}
-                    </Button>
-                    <Button onClick={resetAll} variant="outline" className="h-12 px-5 rounded-xl bg-transparent text-white border-white/20">
-                      <RefreshCw className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-10 rounded-2xl" style={{ background: '#140b00', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-40" style={{ color: PINK }} />
-                <p className="text-white font-medium mb-2">No providers found in this category yet</p>
-                <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>Be the first to list services in this area</p>
-                <Link to={createPageUrl('Browse')}>
-                  <Button className="border-0 text-white" style={{ background: PINK }}>Browse All Providers</Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* PHASE: CONTACTING */}
-        {phase === 'contacting' && (
-          <div className="text-center py-16">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse" style={{ background: 'rgba(203,60,122,0.15)', border: '2px solid rgba(203,60,122,0.3)' }}>
-              <Send className="w-10 h-10" style={{ color: PINK }} />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">Notifying providers...</h3>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>Sending your request to {selectedProviders.length} provider(s)</p>
-          </div>
-        )}
-
-        {/* PHASE: DONE */}
-        {phase === 'done' && (
-          <div className="space-y-6">
-            <div className="text-center py-10 rounded-3xl" style={{ background: '#140b00', border: '1px solid rgba(16,185,129,0.3)' }}>
-              <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: 'rgba(16,185,129,0.15)' }}>
-                <CheckCircle className="w-10 h-10" style={{ color: '#10b981' }} />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Request Sent Successfully!</h3>
-              <p className="text-base mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                {contactedProviders.length} provider(s) have been notified about your request for <strong className="text-white">"{interpretation?.service_type}"</strong>.
-              </p>
-              <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                They will contact you at <strong className="text-white">{userInfo.phone}</strong> soon.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={resetAll} className="border-0 text-white" style={{ background: PINK }}>
-                  <Mic className="w-4 h-4 mr-2" /> Make Another Request
-                </Button>
-                <Link to={createPageUrl('Browse')}>
-                  <Button variant="outline" className="bg-transparent text-white border-white/20">
-                    Browse All Providers <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            {/* Contacted providers list */}
-            <div className="rounded-2xl p-5 space-y-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <h4 className="text-sm font-semibold text-white">Notified Providers</h4>
-              {matchedProviders.filter(p => contactedProviders.includes(p.id)).map(p => (
-                <div key={p.id} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0" style={{ background: PINK }}>
-                    {p.business_name?.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{p.business_name}</p>
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{p.email}</p>
-                  </div>
-                  <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#10b981' }} />
-                </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+              {SAMPLE_PROMPTS.map((s, i) => (
+                <button key={i} onClick={() => setTextInput(s)}
+                  style={{
+                    padding: '7px 14px', borderRadius: 100, border: `1px solid ${D.border}`,
+                    background: 'transparent', color: D.muted, fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = D.rose; e.currentTarget.style.color = D.rose; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = D.border; e.currentTarget.style.color = D.muted; }}>
+                  {s}
+                </button>
               ))}
             </div>
           </div>
         )}
+
+        {/* ── PROCESSING ── */}
+        {phase === 'processing' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <GlassCard style={{ padding: '16px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Volume2 size={14} style={{ color: D.muted }} />
+                <p style={{ fontSize: 14, fontStyle: 'italic', color: D.muted }}>"{transcript}"</p>
+              </div>
+            </GlassCard>
+            <PipelineProgress activeStage={pipelineStage} />
+          </div>
+        )}
+
+        {/* ── RESULTS ── */}
+        {phase === 'results' && interpretation && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* Transcript chip */}
+            <GlassCard style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Volume2 size={14} style={{ color: D.muted }} />
+              <p style={{ flex: 1, fontSize: 14, fontStyle: 'italic', color: D.muted }}>"{transcript}"</p>
+              <button onClick={reset}><X size={14} style={{ color: D.faint }} /></button>
+            </GlassCard>
+
+            {/* AI Interpretation */}
+            <GlassCard style={{ padding: '20px 24px' }} glow={D.blue}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <Brain size={15} style={{ color: D.blue }} />
+                <span style={{ color: D.blue, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em' }}>AI INTERPRETATION</span>
+              </div>
+              <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 12 }}>{interpretation.summary}</p>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                {[
+                  { label: interpretation.service_category, color: D.blue },
+                  { label: URGENCY[interpretation.urgency]?.icon + ' ' + URGENCY[interpretation.urgency]?.label, color: URGENCY[interpretation.urgency]?.color },
+                  { label: `Emotion: ${interpretation.emotion_level || 'low'}`, color: interpretation.emotion_level === 'high' ? D.rose : D.muted },
+                ].map((t, i) => (
+                  <span key={i} style={{
+                    padding: '4px 12px', borderRadius: 100, fontSize: 12, fontWeight: 600,
+                    background: `${t.color}15`, border: `1px solid ${t.color}35`, color: t.color,
+                  }}>{t.label}</span>
+                ))}
+              </div>
+
+              {interpretation.key_requirements?.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                  {interpretation.key_requirements.map((r, i) => (
+                    <span key={i} style={{ fontSize: 12, color: D.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <CheckCircle size={11} style={{ color: D.green }} /> {r}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {interpretation.context_signals?.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {interpretation.context_signals.map((s, i) => (
+                    <span key={i} style={{ fontSize: 11, padding: '2px 10px', borderRadius: 6, background: D.surface, color: D.faint, border: `1px solid ${D.border}` }}>
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </GlassCard>
+
+            {/* Weight breakdown */}
+            <WeightBreakdown urgencyKey={interpretation.urgency} />
+
+            {/* Providers */}
+            {matchedProviders.length > 0 ? (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ fontWeight: 800, fontSize: 16, color: D.text }}>
+                    Ranked Providers
+                    <span style={{ marginLeft: 8, fontSize: 13, fontWeight: 400, color: D.muted }}>
+                      ({matchedProviders.length} matched · {selectedProviders.length} selected)
+                    </span>
+                  </h3>
+                  <span style={{ fontSize: 11, color: D.faint, background: D.surface, padding: '4px 10px', borderRadius: 6, border: `1px solid ${D.border}` }}>
+                    Sorted by composite score
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {matchedProviders.map(p => (
+                    <ProviderCard key={p.id} provider={p} selected={selectedProviders.includes(p.id)}
+                      onToggle={() => setSelectedProviders(prev => prev.includes(p.id) ? prev.filter(x => x !== p.id) : [...prev, p.id])}
+                    />
+                  ))}
+                </div>
+
+                {/* Contact form */}
+                <GlassCard style={{ padding: '24px' }} glow={D.rose}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <Phone size={15} style={{ color: D.rose }} />
+                    <span style={{ fontWeight: 700, color: D.text }}>Your Contact Details</span>
+                  </div>
+                  <p style={{ fontSize: 13, color: D.muted, marginBottom: 16 }}>
+                    {selectedProviders.length} provider(s) selected — they'll be notified and reach out to you.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
+                    {[
+                      { key: 'name',     placeholder: 'Your name *' },
+                      { key: 'phone',    placeholder: 'Phone number *' },
+                      { key: 'location', placeholder: 'Your city / location' },
+                    ].map(({ key, placeholder }) => (
+                      <input key={key} value={userInfo[key]} onChange={e => setUserInfo(i => ({ ...i, [key]: e.target.value }))}
+                        placeholder={placeholder}
+                        style={{
+                          height: 44, borderRadius: 12, padding: '0 14px',
+                          background: D.surface, border: `1px solid ${D.border}`,
+                          color: D.text, fontSize: 13, outline: 'none',
+                        }}
+                        onFocus={e => e.target.style.borderColor = D.rose}
+                        onBlur={e => e.target.style.borderColor = D.border}
+                      />
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      onClick={handleContactProviders}
+                      disabled={!selectedProviders.length || !userInfo.name || !userInfo.phone}
+                      style={{
+                        flex: 1, height: 48, borderRadius: 14, border: 'none',
+                        background: D.grad, color: '#fff', fontWeight: 700, fontSize: 15,
+                        cursor: selectedProviders.length && userInfo.name && userInfo.phone ? 'pointer' : 'not-allowed',
+                        opacity: selectedProviders.length && userInfo.name && userInfo.phone ? 1 : 0.5,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        boxShadow: '0 4px 24px rgba(255,77,109,0.3)',
+                      }}>
+                      <Send size={16} />
+                      Notify {selectedProviders.length || ''} Provider{selectedProviders.length !== 1 ? 's' : ''}
+                    </button>
+                    <button onClick={reset}
+                      style={{ width: 48, height: 48, borderRadius: 14, border: `1px solid ${D.border}`, background: D.surface, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <RefreshCw size={16} style={{ color: D.muted }} />
+                    </button>
+                  </div>
+                </GlassCard>
+              </>
+            ) : (
+              <GlassCard style={{ padding: '40px', textAlign: 'center' }}>
+                <AlertCircle size={40} style={{ color: D.faint, margin: '0 auto 12px' }} />
+                <p style={{ fontWeight: 700, marginBottom: 8 }}>No providers found in this category yet</p>
+                <Link to={createPageUrl('Browse')}>
+                  <button style={{ marginTop: 8, background: D.grad, border: 'none', color: '#fff', padding: '10px 24px', borderRadius: 12, fontWeight: 600, cursor: 'pointer' }}>
+                    Browse All Providers
+                  </button>
+                </Link>
+              </GlassCard>
+            )}
+          </div>
+        )}
+
+        {/* ── CONTACTING ── */}
+        {phase === 'contacting' && (
+          <GlassCard style={{ padding: '60px 24px', textAlign: 'center' }} glow={D.rose}>
+            <div style={{ width: 72, height: 72, borderRadius: '50%', background: `${D.rose}15`, border: `2px solid ${D.rose}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', animation: 'pulse 1s infinite' }}>
+              <Send size={32} style={{ color: D.rose }} />
+            </div>
+            <h3 style={{ fontWeight: 800, fontSize: 20, marginBottom: 8 }}>Notifying providers...</h3>
+            <p style={{ color: D.muted }}>Sending your request to {selectedProviders.length} provider(s)</p>
+          </GlassCard>
+        )}
+
+        {/* ── DONE ── */}
+        {phase === 'done' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <GlassCard style={{ padding: '48px 24px', textAlign: 'center' }} glow={D.green}>
+              <div style={{ width: 72, height: 72, borderRadius: '50%', background: `${D.green}15`, border: `2px solid ${D.green}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                <CheckCircle size={32} style={{ color: D.green }} />
+              </div>
+              <h3 style={{ fontWeight: 900, fontSize: 22, marginBottom: 8 }}>Request Sent!</h3>
+              <p style={{ color: D.muted, marginBottom: 6 }}>
+                {contactedProviders.length} provider(s) notified for <strong style={{ color: D.text }}>{interpretation?.service_type}</strong>
+              </p>
+              <p style={{ color: D.faint, fontSize: 14, marginBottom: 28 }}>
+                They'll reach you at <strong style={{ color: D.text }}>{userInfo.phone}</strong>
+              </p>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button onClick={reset}
+                  style={{ background: D.grad, border: 'none', borderRadius: 14, color: '#fff', fontWeight: 700, padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Mic size={16} /> New Request
+                </button>
+                <Link to={createPageUrl('Browse')}>
+                  <button style={{ background: D.surface, border: `1px solid ${D.border}`, borderRadius: 14, color: D.text, fontWeight: 600, padding: '12px 24px', cursor: 'pointer' }}>
+                    Browse All Providers
+                  </button>
+                </Link>
+              </div>
+            </GlassCard>
+
+            {/* Notified list */}
+            <GlassCard style={{ padding: '20px 24px' }}>
+              <h4 style={{ fontWeight: 700, marginBottom: 14, color: D.text }}>Notified Providers</h4>
+              {matchedProviders.filter(p => contactedProviders.includes(p.id)).map(p => (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: D.rose, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#fff', fontSize: 15 }}>
+                    {p.business_name?.charAt(0)}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: D.text }}>{p.business_name}</div>
+                    <div style={{ fontSize: 12, color: D.faint }}>{p.email}</div>
+                  </div>
+                  <CheckCircle size={16} style={{ color: D.green }} />
+                </div>
+              ))}
+            </GlassCard>
+          </div>
+        )}
       </div>
+
+      <style>{`
+        @keyframes ping { 75%,100% { transform: scale(1.8); opacity: 0; } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

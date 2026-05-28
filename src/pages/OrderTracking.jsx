@@ -1,52 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { db, auth, invokeLLM, uploadFile } from '@/api/db';
 import { useQuery } from '@tanstack/react-query';
-import { MapPin, Phone, Clock, CheckCircle2, Loader2, MessageCircle } from 'lucide-react';
+import { MapPin, Phone, CheckCircle2, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { THEME as L } from '@/lib/theme';
 
 const STATUS_TIMELINE = {
-  pending: { label: 'Booking Confirmed', step: 0, color: '#cb3c7a' },
-  confirmed: { label: 'Provider Assigned', step: 1, color: '#cb3c7a' },
-  in_progress: { label: 'On the Way', step: 2, color: '#3b82f6' },
-  completed: { label: 'Service Completed', step: 3, color: '#10b981' },
-  cancelled: { label: 'Cancelled', step: -1, color: '#ef4444' }
+  pending:     { label: 'Booking Confirmed', step: 0, color: L.accent },
+  confirmed:   { label: 'Provider Assigned', step: 1, color: L.blue },
+  in_progress: { label: 'On the Way',        step: 2, color: L.blue },
+  completed:   { label: 'Service Completed', step: 3, color: L.green },
+  cancelled:   { label: 'Cancelled',         step: -1, color: '#dc2626' },
 };
+
+const cardStyle = { background: '#fff', border: `1px solid #e2e0dc`, borderRadius: 20, overflow: 'hidden', marginBottom: 16 };
+const cardHeaderStyle = { padding: '20px 24px', borderBottom: '1px solid #e2e0dc' };
+const cardBodyStyle = { padding: '20px 24px' };
 
 export default function OrderTracking() {
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('id');
 
-  const { data: order, isLoading } = useQuery({
+  const { data: order, isLoading, refetch } = useQuery({
     queryKey: ['order', orderId],
-    queryFn: async () => {
-      const results = await base44.entities.Order.filter({ id: orderId });
-      return results[0];
-    },
-    enabled: !!orderId
+    queryFn: async () => { const r = await db.Order.filter({ id: orderId }); return r[0]; },
+    enabled: !!orderId,
+    refetchInterval: 10 * 1000,
+    staleTime: 5 * 1000,
   });
 
   const { data: provider } = useQuery({
     queryKey: ['provider', order?.provider_id],
-    queryFn: async () => {
-      const results = await base44.entities.ServiceProvider.filter({ id: order.provider_id });
-      return results[0];
-    },
+    queryFn: async () => { const r = await db.ServiceProvider.filter({ id: order.provider_id }); return r[0]; },
     enabled: !!order?.provider_id
   });
 
   if (isLoading) {
     return (
-      <div style={{ background: '#0f0900' }} className="min-h-screen py-10">
-        <div className="max-w-4xl mx-auto px-4">
+      <div style={{ background: L.bg, minHeight: '100vh', padding: '48px 32px' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <Skeleton className="h-8 w-40 mb-8" />
-          <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
-            <CardContent className="pt-6">
-              <Skeleton className="h-96" />
-            </CardContent>
-          </Card>
+          <Skeleton className="h-96 rounded-2xl" />
         </div>
       </div>
     );
@@ -54,132 +50,118 @@ export default function OrderTracking() {
 
   if (!order) {
     return (
-      <div style={{ background: '#0f0900' }} className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Order not found</h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)' }}>The order you're looking for doesn't exist.</p>
+      <div style={{ background: L.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: L.text, marginBottom: 8 }}>Order not found</h2>
+          <p style={{ color: L.text2 }}>The order you're looking for doesn't exist.</p>
         </div>
       </div>
     );
   }
 
-  const statusInfo = STATUS_TIMELINE[order.status];
+  const statusInfo = STATUS_TIMELINE[order.status] || STATUS_TIMELINE.pending;
 
   return (
-    <div style={{ background: '#0f0900' }} className="min-h-screen py-6 sm:py-10">
-      <div className="max-w-4xl mx-auto px-4 space-y-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Order #{order.order_number}</h1>
-          <p style={{ color: 'rgba(255,255,255,0.6)' }}>{order.service_name}</p>
+    <div style={{ background: L.bg, minHeight: '100vh', padding: '48px 32px 80px', fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 700, letterSpacing: '-1px', color: L.text, marginBottom: 4 }}>
+            Order #{order.order_number}
+          </h1>
+          <p style={{ color: L.text2, fontWeight: 300 }}>{order.service_name}</p>
         </div>
 
         {/* Status Timeline */}
-        <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
-          <CardHeader>
-            <CardTitle className="text-white">Service Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-8">
-                {[0, 1, 2, 3].map((step) => {
-                  const isActive = statusInfo.step >= step;
-                  return (
-                    <div key={step} className="flex flex-col items-center flex-1">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center mb-3 transition-all"
-                        style={{
-                          background: isActive ? statusInfo.color : 'rgba(255,255,255,0.1)',
-                          color: isActive ? 'white' : 'rgba(255,255,255,0.4)'
-                        }}
-                      >
-                        {isActive ? <CheckCircle2 className="w-6 h-6" /> : <div className="w-2 h-2 rounded-full bg-current" />}
-                      </div>
-                      <div className="text-xs text-center" style={{ color: isActive ? statusInfo.color : 'rgba(255,255,255,0.4)' }}>
-                        {['Confirmed', 'Assigned', 'On Way', 'Completed'][step]}
-                      </div>
+        <div style={cardStyle}>
+          <div style={cardHeaderStyle}>
+            <h3 style={{ fontWeight: 700, fontSize: 16, color: L.text, margin: 0 }}>Service Status</h3>
+          </div>
+          <div style={cardBodyStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+              {[0, 1, 2, 3].map((step) => {
+                const isActive = statusInfo.step >= step;
+                return (
+                  <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10, background: isActive ? statusInfo.color : L.bg3, transition: 'all 0.3s' }}>
+                      {isActive
+                        ? <CheckCircle2 size={20} color="#fff" />
+                        : <div style={{ width: 8, height: 8, borderRadius: '50%', background: L.border2 }} />
+                      }
                     </div>
-                  );
-                })}
-              </div>
-              <p className="text-center text-white font-semibold">{statusInfo.label}</p>
+                    <div style={{ fontSize: 11, textAlign: 'center', color: isActive ? statusInfo.color : L.text3, fontWeight: isActive ? 600 : 400 }}>
+                      {['Confirmed', 'Assigned', 'On Way', 'Completed'][step]}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </CardContent>
-        </Card>
+            <p style={{ textAlign: 'center', fontWeight: 700, color: L.text, fontSize: 15 }}>{statusInfo.label}</p>
+          </div>
+        </div>
 
         {/* Service Details */}
-        <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
-          <CardHeader>
-            <CardTitle className="text-white">Service Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>Scheduled Date & Time</p>
-                <p className="text-white font-semibold">{order.scheduled_date} at {order.scheduled_time}</p>
-              </div>
-              <div>
-                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>Service Address</p>
-                <p className="text-white font-semibold flex items-start gap-2">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#cb3c7a' }} />
-                  {order.address}
-                </p>
-              </div>
+        <div style={cardStyle}>
+          <div style={cardHeaderStyle}>
+            <h3 style={{ fontWeight: 700, fontSize: 16, color: L.text, margin: 0 }}>Service Details</h3>
+          </div>
+          <div style={{ ...cardBodyStyle, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+            <div>
+              <p style={{ fontSize: 12, color: L.text3, marginBottom: 4 }}>Scheduled Date & Time</p>
+              <p style={{ color: L.text, fontWeight: 600 }}>{order.scheduled_date} at {order.scheduled_time}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <p style={{ fontSize: 12, color: L.text3, marginBottom: 4 }}>Service Address</p>
+              <p style={{ color: L.text, fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                <MapPin size={14} style={{ color: L.accent, marginTop: 2, flexShrink: 0 }} />
+                {order.address}
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Provider Info */}
         {provider && (
-          <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
-            <CardHeader>
-              <CardTitle className="text-white">Service Provider</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div>
-                  <p className="text-white font-semibold text-lg">{provider.business_name}</p>
-                  <p style={{ color: 'rgba(255,255,255,0.6)' }} className="flex items-center gap-2 mt-2">
-                    <Phone className="w-4 h-4" />
-                    {provider.phone}
+          <div style={cardStyle}>
+            <div style={cardHeaderStyle}>
+              <h3 style={{ fontWeight: 700, fontSize: 16, color: L.text, margin: 0 }}>Service Provider</h3>
+            </div>
+            <div style={{ ...cardBodyStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: 17, color: L.text, marginBottom: 6 }}>{provider.business_name}</p>
+                {provider.phone && (
+                  <p style={{ color: L.text2, display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}>
+                    <Phone size={14} /> {provider.phone}
                   </p>
-                </div>
-                <Button
-                  size="sm"
-                  style={{ background: '#cb3c7a' }}
-                  className="text-white hover:opacity-90"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Chat
-                </Button>
+                )}
               </div>
-            </CardContent>
-          </Card>
+              <Button variant="outline">
+                <MessageCircle className="w-4 h-4 mr-2" /> Chat
+              </Button>
+            </div>
+          </div>
         )}
 
         {/* Payment Summary */}
-        <Card style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}>
-          <CardHeader>
-            <CardTitle className="text-white">Payment Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between text-white">
-              <span>Service Amount</span>
-              <span>${order.subtotal}</span>
+        <div style={cardStyle}>
+          <div style={cardHeaderStyle}>
+            <h3 style={{ fontWeight: 700, fontSize: 16, color: L.text, margin: 0 }}>Payment Summary</h3>
+          </div>
+          <div style={{ ...cardBodyStyle, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, color: L.text2 }}>
+              <span>Service Amount</span><span style={{ color: L.text, fontWeight: 600 }}>${order.subtotal}</span>
             </div>
-            <div className="flex justify-between" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              <span>Commission ({order.commission_rate}%)</span>
-              <span>${order.commission_amount}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, color: L.text2 }}>
+              <span>Commission ({order.commission_rate}%)</span><span>${order.commission_amount}</span>
             </div>
-            <div className="border-t border-white/10 pt-3 flex justify-between text-white font-bold">
-              <span>Total Amount</span>
-              <span>${order.total_amount}</span>
+            <div style={{ borderTop: `1px solid ${L.border}`, paddingTop: 12, display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 15, color: L.text }}>
+              <span>Total Amount</span><span>${order.total_amount}</span>
             </div>
-            <div className="flex justify-between text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: L.text3 }}>
               <span>Payment Status</span>
-              <span className="capitalize">{order.payment_status}</span>
+              <span style={{ textTransform: 'capitalize', fontWeight: 600 }}>{order.payment_status}</span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

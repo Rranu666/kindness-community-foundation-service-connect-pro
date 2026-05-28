@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from 'react-router-dom';
+import { db, auth, invokeLLM, uploadFile } from '@/api/db';
 import { createPageUrl } from '@/utils';
 import {
   Search, Briefcase, Shield, Star, CreditCard, ArrowRight, ChevronRight, ChevronLeft, CheckCircle
@@ -30,9 +30,9 @@ const STEPS = [
   },
   {
     icon: <CreditCard className="w-12 h-12" style={{ color: PINK }} />,
-    title: 'Book & Pay Securely',
-    description: 'Instant booking with secure payments. Track your service in real-time and only pay when satisfied.',
-    highlight: 'Secure checkout • Booking confirmation',
+    title: 'Book & Pay Your Way',
+    description: 'Instant booking with flexible payment options. Pay online or in person after the job is done — card, UPI, or cash accepted.',
+    highlight: 'Pay after service • Multiple payment options',
   },
   {
     icon: <Briefcase className="w-12 h-12" style={{ color: PINK }} />,
@@ -43,7 +43,6 @@ const STEPS = [
 ];
 
 export default function OnboardingModal({ open, onClose }) {
-  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [selectedRole, setSelectedRole] = useState(null);
 
@@ -62,11 +61,16 @@ export default function OnboardingModal({ open, onClose }) {
   };
 
   const handleFinish = () => {
-    onClose();
     if (selectedRole === 'provider') {
-      navigate('/ProviderSignup');
+      onClose();
+      window.location.href = createPageUrl('ProviderSignup');
     } else {
-      navigate('/Login');
+      onClose();
+      if (!selectedRole) {
+        auth.redirectToLogin();
+      } else {
+        auth.redirectToLogin();
+      }
     }
   };
 

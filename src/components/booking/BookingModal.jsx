@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,23 +9,22 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2, Tag, Wallet, CreditCard, Banknote, CheckCircle2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { db, auth, invokeLLM, uploadFile, callFunction } from '@/api/db';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import TipSelector from '@/components/tips/TipSelector';
-
-const timeSlots = [
-  '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-  '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
-];
+import StripePaymentForm from './StripePaymentForm';
+import BookingCalendarGrid from './BookingCalendarGrid';
+import { THEME as L } from '@/lib/theme';
 
 const COMMISSION_RATE = 10;
-
 const PAYMENT_METHODS = [
   { id: 'wallet', label: 'Wallet', icon: Wallet },
-  { id: 'card', label: 'Card', icon: CreditCard },
-  { id: 'cash', label: 'Cash', icon: Banknote },
-  { id: 'upi', label: 'UPI', icon: CreditCard },
+  { id: 'card',   label: 'Card',   icon: CreditCard },
+  { id: 'cash',   label: 'Cash',   icon: Banknote },
+  { id: 'upi',    label: 'UPI',    icon: CreditCard },
 ];
+const ALL_TIME_SLOTS = ['09:00 AM','10:00 AM','11:00 AM','12:00 PM','01:00 PM','02:00 PM','03:00 PM','04:00 PM','05:00 PM'];
 
 export default function BookingModal({ open, onClose, service, provider }) {
   const [loading, setLoading] = useState(false);
@@ -37,39 +36,53 @@ export default function BookingModal({ open, onClose, service, provider }) {
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoApplied, setPromoApplied] = useState(null);
   const [promoLoading, setPromoLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    customer_name: '',
-    customer_email: '',
-    customer_phone: '',
-    scheduled_time: '',
-    address: '',
-    notes: ''
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [orderId, setOrderId] = useState(null);
+  const [showCalendarGrid, setShowCalendarGrid] = useState(false);
+  const [formData, setFormData] = useState({ customer_name: '', customer_email: '', customer_phone: '', scheduled_time: '', address: '', notes: '' });
+  const debounceTimer = useRef(null);
+
+  const { data: existingOrders = [] } = useQuery({
+    queryKey: ['provider-orders-availability', provider?.id],
+    queryFn: () => db.Order.filter({ provider_id: provider.id }),
+    enabled: open && !!provider?.id,
+    staleTime: 30 * 1000,
   });
 
-  // Pre-fill from logged-in user
+  const bookedSlotsMap = useMemo(() => {
+    const map = {};
+    existingOrders.filter(o => ['pending','confirmed','in_progress'].includes(o.status) && o.scheduled_date && o.scheduled_time)
+      .forEach(o => { if (!map[o.scheduled_date]) map[o.scheduled_date] = new Set(); map[o.scheduled_date].add(o.scheduled_time); });
+    return map;
+  }, [existingOrders]);
+
+  const isDateFullyBooked = (d) => { const key = format(d, 'yyyy-MM-dd'); const b = bookedSlotsMap[key]; return b && b.size >= ALL_TIME_SLOTS.length; };
+
+  const availableSlots = useMemo(() => {
+    if (!date) return ALL_TIME_SLOTS.map(slot => ({ slot, available: true }));
+    const key = format(date, 'yyyy-MM-dd');
+    const booked = bookedSlotsMap[key] || new Set();
+    return ALL_TIME_SLOTS.map(slot => ({ slot, available: !booked.has(slot) }));
+  }, [date, bookedSlotsMap]);
+
   useEffect(() => {
-    base44.auth.me().then(user => {
-      if (user) {
-        setFormData(prev => ({
-          ...prev,
-          customer_name: user.full_name || '',
-          customer_email: user.email || '',
-          customer_phone: user.phone || ''
-        }));
-      }
+    auth.me().then(user => {
+      if (user) setFormData(prev => ({ ...prev, customer_name: user.full_name || '', customer_email: user.email || '', customer_phone: user.phone || '' }));
     }).catch(() => {});
   }, [open]);
 
-  // Fetch tax rate based on location (debounced)
-  const debounceTimer = useRef(null);
   useEffect(() => {
     clearTimeout(debounceTimer.current);
-    if (formData.address) {
+    if (formData.address && formData.address.trim()) {
       debounceTimer.current = setTimeout(async () => {
-        const configs = await base44.entities.TaxConfig.filter({ is_active: true });
-        const matchingConfig = configs.find(c => formData.address.toLowerCase().includes(c.city.toLowerCase()));
-        setTaxRate(matchingConfig?.tax_rate || 0);
-      }, 500);
+        try {
+          const configs = await db.TaxConfig.filter({ is_active: true });
+          const match = configs.find(c => formData.address.toLowerCase().includes(c.city.toLowerCase()));
+          setTaxRate(match?.tax_rate || 0);
+        } catch { setTaxRate(0); }
+      }, 1000);
+    } else {
+      setTaxRate(0);
     }
     return () => clearTimeout(debounceTimer.current);
   }, [formData.address]);
@@ -77,271 +90,182 @@ export default function BookingModal({ open, onClose, service, provider }) {
   const subtotal = service?.price || 0;
   const commissionAmount = (subtotal * COMMISSION_RATE) / 100;
   const taxAmount = (subtotal * taxRate) / 100;
-  const totalBeforeDiscount = subtotal + commissionAmount + taxAmount + tip;
-  const totalAmount = Math.max(0, totalBeforeDiscount - promoDiscount);
+  const totalAmount = Math.max(0, subtotal + commissionAmount + taxAmount + tip - promoDiscount);
 
   const applyPromoCode = async () => {
     if (!promoCode.trim()) return;
     setPromoLoading(true);
     try {
-      const promos = await base44.entities.Promotion.filter({ code: promoCode.trim().toUpperCase(), is_active: true });
+      const promos = await db.Promotion.filter({ code: promoCode.trim().toUpperCase(), is_active: true });
       const promo = promos[0];
-      if (!promo) {
-        toast.error('Invalid promo code');
-        setPromoLoading(false);
-        return;
-      }
-      const now = new Date();
-      if (promo.valid_until && new Date(promo.valid_until) < now) {
-        toast.error('Promo code has expired');
-        setPromoLoading(false);
-        return;
-      }
-      if (promo.min_order_value && subtotal < promo.min_order_value) {
-        toast.error(`Minimum order value $${promo.min_order_value} required`);
-        setPromoLoading(false);
-        return;
-      }
-      let discount = 0;
-      if (promo.discount_type === 'percentage') {
-        discount = (subtotal * promo.discount_value) / 100;
-        if (promo.max_discount) discount = Math.min(discount, promo.max_discount);
-      } else {
-        discount = promo.discount_value;
-      }
-      setPromoDiscount(discount);
-      setPromoApplied(promo);
-      toast.success(`Promo applied! You saved $${discount.toFixed(2)}`);
-    } catch {
-      toast.error('Failed to apply promo code');
-    } finally {
-      setPromoLoading(false);
-    }
+      if (!promo) { toast.error('Invalid promo code'); setPromoLoading(false); return; }
+      if (promo.valid_until && new Date(promo.valid_until) < new Date()) { toast.error('Promo code expired'); setPromoLoading(false); return; }
+      if (promo.min_order_value && subtotal < promo.min_order_value) { toast.error(`Minimum order $${promo.min_order_value}`); setPromoLoading(false); return; }
+      if (promo.usage_limit && promo.current_usage >= promo.usage_limit) { toast.error('Promo code limit reached'); setPromoLoading(false); return; }
+      let discount = promo.discount_type === 'percentage' ? Math.min((subtotal * promo.discount_value) / 100, promo.max_discount || Infinity) : promo.discount_value;
+      setPromoDiscount(discount); setPromoApplied(promo);
+      toast.success(`Saved $${discount.toFixed(2)}!`);
+    } catch (error) { toast.error(error?.message || 'Failed to apply promo'); }
+    finally { setPromoLoading(false); }
   };
 
-  const removePromo = () => {
-    setPromoCode('');
-    setPromoDiscount(0);
-    setPromoApplied(null);
-  };
+  const removePromo = () => { setPromoCode(''); setPromoDiscount(0); setPromoApplied(null); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!date || !formData.scheduled_time) {
-      toast.error('Please select date and time');
-      return;
-    }
-
+    if (!date || !formData.scheduled_time) { toast.error('Please select date and time'); return; }
+    if (!formData.customer_email || !formData.customer_name) { toast.error('Name and email are required'); return; }
+    if (!formData.address?.trim()) { toast.error('Service address is required'); return; }
     setLoading(true);
     try {
       const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
-
-      const orderData = {
-        order_number: orderNumber,
-        customer_name: formData.customer_name,
-        customer_email: formData.customer_email,
-        customer_phone: formData.customer_phone,
-        provider_id: provider.id,
-        service_id: service.id,
-        service_name: service.name,
-        provider_name: provider.business_name,
-        scheduled_date: format(date, 'yyyy-MM-dd'),
-        scheduled_time: formData.scheduled_time,
-        address: formData.address,
-        notes: formData.notes,
-        subtotal: subtotal,
-        commission_rate: COMMISSION_RATE,
-        commission_amount: commissionAmount,
-        tax_rate: taxRate,
-        tax_amount: taxAmount,
-        tip_amount: tip,
-        total_amount: totalAmount,
-        status: 'pending',
-        payment_status: paymentMethod === 'cash' ? 'pending' : 'paid',
-        payment_method: paymentMethod
-      };
-
-      // If paying by wallet, deduct balance
-      if (paymentMethod === 'wallet') {
-        const wallets = await base44.entities.Wallet.filter({ customer_email: formData.customer_email });
-        const wallet = wallets[0];
-        if (!wallet || wallet.balance < totalAmount) {
-          toast.error('Insufficient wallet balance');
-          setLoading(false);
-          return;
-        }
-        await base44.entities.Wallet.update(wallet.id, {
-          balance: wallet.balance - totalAmount,
-          total_spent: (wallet.total_spent || 0) + totalAmount
-        });
-        await base44.entities.Transaction.create({
-          customer_email: formData.customer_email,
-          type: 'debit',
-          amount: totalAmount,
-          payment_method: 'wallet',
-          description: `Payment for ${service.name}`
-        });
+      if (promoApplied) await db.Promotion.update(promoApplied.id, { current_usage: (promoApplied.current_usage || 0) + 1 });
+      const order = await db.Order.create({
+        order_number: orderNumber, customer_name: formData.customer_name, customer_email: formData.customer_email,
+        customer_phone: formData.customer_phone, provider_id: provider.id, service_id: service.id,
+        service_name: service.name, provider_name: provider.business_name, scheduled_date: format(date, 'yyyy-MM-dd'),
+        scheduled_time: formData.scheduled_time, address: formData.address, notes: formData.notes,
+        subtotal, commission_rate: COMMISSION_RATE, commission_amount: commissionAmount,
+        tax_rate: taxRate, tax_amount: taxAmount, tip_amount: tip, total_amount: totalAmount,
+        status: 'pending', payment_status: 'pending', payment_method: paymentMethod
+      });
+      setOrderId(order.id);
+      if (paymentMethod === 'card') { setShowPaymentForm(true); return; }
+      const paymentResponse = await callFunction('processBookingPayment', { orderId: order.id, totalAmount, paymentMethod });
+      if (paymentResponse.data.success) {
+        await Promise.all([
+          db.Notification.create({ recipient_email: formData.customer_email, recipient_type: 'customer', type: 'booking_confirmed', title: 'Booking Confirmed', message: `Your booking for ${service.name} has been confirmed. Order #${orderNumber}`, order_id: order.id, channels: ['email'] }),
+          db.Notification.create({ recipient_email: provider.email, recipient_type: 'provider', type: 'booking_confirmed', title: 'New Booking', message: `New booking from ${formData.customer_name} for ${service.name}. Order #${orderNumber}`, order_id: order.id, channels: ['email'] })
+        ]);
+        toast.success(paymentResponse.data.message);
+        onClose();
       }
-
-      // Update promo usage
-      if (promoApplied) {
-        await base44.entities.Promotion.update(promoApplied.id, {
-          current_usage: (promoApplied.current_usage || 0) + 1
-        });
-      }
-
-      const order = await base44.entities.Order.create(orderData);
-
-      await Promise.all([
-        base44.entities.Notification.create({
-          recipient_email: formData.customer_email,
-          recipient_type: 'customer',
-          type: 'booking_confirmed',
-          title: 'Booking Confirmed',
-          message: `Your booking for ${service.name} with ${provider.business_name} has been confirmed. Order #${orderNumber}`,
-          order_id: order.id,
-          channels: ['email']
-        }),
-        base44.entities.Notification.create({
-          recipient_email: provider.email,
-          recipient_type: 'provider',
-          type: 'booking_confirmed',
-          title: 'New Booking',
-          message: `You have a new booking from ${formData.customer_name} for ${service.name}. Order #${orderNumber}`,
-          order_id: order.id,
-          channels: ['email']
-        })
-      ]);
-
-      toast.success('Booking confirmed!');
-      onClose();
-    } catch (error) {
-      toast.error(error?.message || 'Booking failed');
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { toast.error(error?.message || 'Booking failed'); }
+    finally { setLoading(false); }
   };
+
+  const handlePaymentSuccess = async () => {
+    try {
+      const order = await db.Order.get(orderId);
+      await Promise.all([
+        db.Notification.create({ recipient_email: formData.customer_email, recipient_type: 'customer', type: 'booking_confirmed', title: 'Booking Confirmed', message: `Your booking for ${service.name} has been confirmed. Order #${order.order_number}`, order_id: orderId, channels: ['email'] }),
+        db.Notification.create({ recipient_email: provider.email, recipient_type: 'provider', type: 'booking_confirmed', title: 'New Booking', message: `New booking from ${formData.customer_name} for ${service.name}. Order #${order.order_number}`, order_id: orderId, channels: ['email'] })
+      ]);
+      onClose();
+    } catch { toast.error('Error finalizing booking'); }
+  };
+
+  const inputStyle = { background: L.bg2, borderColor: L.border, color: L.text };
+  const fieldBorder = `1px solid ${L.border}`;
+
+  if (showPaymentForm && orderId) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Complete Payment</DialogTitle></DialogHeader>
+          <StripePaymentForm amount={totalAmount} orderId={orderId} paymentMethod={paymentMethod} onSuccess={handlePaymentSuccess} onError={() => setShowPaymentForm(false)} />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)' }}>
-        <DialogHeader>
-          <DialogTitle className="text-xl text-white">Book Service</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Book Service</DialogTitle></DialogHeader>
 
-        <div style={{ background: 'rgba(203,60,122,0.1)', borderColor: 'rgba(203,60,122,0.2)' }} className="rounded-xl p-4 mb-2 border">
-          <h3 className="font-semibold text-white">{service?.name}</h3>
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{provider?.business_name} · ${service?.price}</p>
+        <div style={{ background: `${L.accent}08`, border: `1px solid ${L.accent}20`, borderRadius: 12, padding: '14px 16px', marginBottom: 4 }}>
+          <h3 style={{ fontWeight: 700, color: L.text, marginBottom: 2 }}>{service?.name}</h3>
+          <p style={{ fontSize: 13, color: L.text2 }}>{provider?.business_name} · ${service?.price}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Contact Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="sm:col-span-2">
-              <Label className="text-white/70 text-sm">Full Name *</Label>
-              <Input required value={formData.customer_name}
-                onChange={(e) => setFormData({...formData, customer_name: e.target.value})}
-                placeholder="John Doe"
-                style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
-                className="placeholder:text-gray-500" />
-            </div>
-            <div>
-              <Label className="text-white/70 text-sm">Email *</Label>
-              <Input type="email" required value={formData.customer_email}
-                onChange={(e) => setFormData({...formData, customer_email: e.target.value})}
-                placeholder="john@example.com"
-                style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
-                className="placeholder:text-gray-500" />
-            </div>
-            <div>
-              <Label className="text-white/70 text-sm">Phone</Label>
-              <Input value={formData.customer_phone}
-                onChange={(e) => setFormData({...formData, customer_phone: e.target.value})}
-                placeholder="+1 234 567 890"
-                style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
-                className="placeholder:text-gray-500" />
-            </div>
-          </div>
-
-          {/* Date & Time */}
+          {/* Contact */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-white/70 text-sm">Date *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal text-white"
-                    style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: date ? '#fff' : 'rgba(255,255,255,0.4)' }}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, 'PPP') : 'Pick a date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={date} onSelect={setDate}
-                    disabled={(d) => d < new Date()} />
-                </PopoverContent>
-              </Popover>
+            <div className="col-span-2">
+              <Label>Full Name *</Label>
+              <Input required value={formData.customer_name} onChange={e => setFormData({...formData, customer_name: e.target.value})} placeholder="John Doe" style={inputStyle} className="mt-1" />
             </div>
             <div>
-              <Label className="text-white/70 text-sm">Time *</Label>
-              <Select value={formData.scheduled_time}
-                onValueChange={(value) => setFormData({...formData, scheduled_time: value})}>
-                <SelectTrigger style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}>
-                  <SelectValue placeholder="Select time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map((slot) => (
-                    <SelectItem key={slot} value={slot}>{slot}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Email *</Label>
+              <Input type="email" required value={formData.customer_email} onChange={e => setFormData({...formData, customer_email: e.target.value})} placeholder="john@example.com" style={inputStyle} className="mt-1" />
+            </div>
+            <div>
+              <Label>Phone</Label>
+              <Input value={formData.customer_phone} onChange={e => setFormData({...formData, customer_phone: e.target.value})} placeholder="+1 234 567 890" style={inputStyle} className="mt-1" />
             </div>
           </div>
 
-          {/* Address */}
+          {/* Calendar toggle */}
           <div>
-            <Label className="text-white/70 text-sm">Service Address *</Label>
-            <Textarea required value={formData.address}
-              onChange={(e) => setFormData({...formData, address: e.target.value})}
-              placeholder="Enter your complete address"
-              rows={2}
-              style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
-              className="placeholder:text-gray-500" />
+            <button type="button" onClick={() => setShowCalendarGrid(!showCalendarGrid)}
+              style={{ fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 100, background: showCalendarGrid ? L.text : L.bg2, color: showCalendarGrid ? '#fff' : L.text2, border: `1px solid ${showCalendarGrid ? L.text : L.border}`, cursor: 'pointer', marginBottom: 12 }}>
+              📅 Calendar View
+            </button>
+            {showCalendarGrid ? (
+              <div style={{ padding: 16, borderRadius: 14, background: L.bg2, border: fieldBorder }}>
+                <BookingCalendarGrid selectedDate={date} onSelectSlot={(d, time) => { setDate(d); setFormData(prev => ({ ...prev, scheduled_time: time })); }} bookedSlotsMap={bookedSlotsMap} provider={provider} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Date *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal mt-1" style={{ background: L.bg2, borderColor: L.border }}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />{date ? format(date, 'PPP') : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar mode="single" selected={date} onSelect={d => { setDate(d); setFormData(prev => ({ ...prev, scheduled_time: '' })); }}
+                        disabled={d => { const t = new Date(); t.setHours(0,0,0,0); return d < t || isDateFullyBooked(d); }}
+                        modifiers={{ fullyBooked: d => isDateFullyBooked(d) }}
+                        modifiersStyles={{ fullyBooked: { textDecoration: 'line-through', opacity: 0.4 } }} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label>Time *</Label>
+                  <Select value={formData.scheduled_time} onValueChange={v => setFormData({...formData, scheduled_time: v})}>
+                    <SelectTrigger className="mt-1" style={{ background: L.bg2, borderColor: L.border }}><SelectValue placeholder="Select time" /></SelectTrigger>
+                    <SelectContent>
+                      {availableSlots.map(({ slot, available }) => (
+                        <SelectItem key={slot} value={slot} disabled={!available} style={{ opacity: available ? 1 : 0.4 }}>
+                          {slot}{!available ? ' — Booked' : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Notes */}
           <div>
-            <Label className="text-white/70 text-sm">Special Instructions</Label>
-            <Textarea value={formData.notes}
-              onChange={(e) => setFormData({...formData, notes: e.target.value})}
-              placeholder="Any special requirements?"
-              rows={2}
-              style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
-              className="placeholder:text-gray-500" />
+            <Label>Service Address *</Label>
+            <Textarea required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="Enter your complete address" rows={2} style={inputStyle} className="mt-1" />
+          </div>
+          <div>
+            <Label>Special Instructions</Label>
+            <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Any special requirements?" rows={2} style={inputStyle} className="mt-1" />
           </div>
 
           {/* Promo Code */}
           <div>
-            <Label className="text-white/70 text-sm">Promo Code</Label>
+            <Label>Promo Code</Label>
             {promoApplied ? (
-              <div className="flex items-center gap-2 p-3 rounded-lg" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}>
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
-                <span className="text-green-400 text-sm font-semibold flex-1">{promoApplied.code} — saved ${promoDiscount.toFixed(2)}</span>
-                <Button type="button" size="sm" variant="ghost" onClick={removePromo}
-                  className="text-red-400 h-6 px-2 hover:bg-red-400/10">Remove</Button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 12, background: '#ecfdf5', border: '1px solid #a7f3d0', marginTop: 6 }}>
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                <span style={{ color: '#059669', fontSize: 13, fontWeight: 600, flex: 1 }}>{promoApplied.code} — saved ${promoDiscount.toFixed(2)}</span>
+                <Button type="button" size="sm" variant="ghost" onClick={removePromo} className="text-red-500 h-6 px-2">Remove</Button>
               </div>
             ) : (
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(255,255,255,0.4)' }} />
-                  <Input value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                    placeholder="Enter promo code"
-                    className="pl-9 placeholder:text-gray-500"
-                    style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }} />
+              <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <Tag style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: L.text3 }} size={15} />
+                  <Input value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} placeholder="Enter promo code" style={{ ...inputStyle, paddingLeft: 34 }} />
                 </div>
-                <Button type="button" onClick={applyPromoCode} disabled={promoLoading || !promoCode.trim()}
-                  style={{ background: 'rgba(203,60,122,0.2)', color: '#cb3c7a', border: '1px solid rgba(203,60,122,0.3)' }}
-                  className="hover:opacity-90 shrink-0">
+                <Button type="button" onClick={applyPromoCode} disabled={promoLoading || !promoCode.trim()} variant="outline">
                   {promoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
                 </Button>
               </div>
@@ -350,70 +274,41 @@ export default function BookingModal({ open, onClose, service, provider }) {
 
           {/* Payment Method */}
           <div>
-            <Label className="text-white/70 text-sm mb-2 block">Payment Method</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <Label className="mb-2 block">Payment Method</Label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
               {PAYMENT_METHODS.map(({ id, label, icon: Icon }) => (
-                <button key={id} type="button"
-                  onClick={() => setPaymentMethod(id)}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all text-sm font-medium"
-                  style={{
-                    background: paymentMethod === id ? 'rgba(203,60,122,0.15)' : 'rgba(255,255,255,0.04)',
-                    borderColor: paymentMethod === id ? '#cb3c7a' : 'rgba(255,255,255,0.1)',
-                    color: paymentMethod === id ? '#cb3c7a' : 'rgba(255,255,255,0.6)'
-                  }}>
-                  <Icon className="w-5 h-5" />
-                  <span className="text-xs">{label}</span>
+                <button key={id} type="button" onClick={() => setPaymentMethod(id)}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 8px', borderRadius: 12, border: `1px solid ${paymentMethod === id ? L.accent : L.border}`, background: paymentMethod === id ? `${L.accent}10` : L.bg2, color: paymentMethod === id ? L.accent : L.text2, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+                  <Icon size={18} />{label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Tip */}
           <TipSelector amount={tip} onTipChange={setTip} serviceTotal={subtotal} />
 
-          {/* Price Summary */}
-          <div className="rounded-xl p-4 space-y-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div className="flex justify-between text-sm">
-              <span style={{ color: 'rgba(255,255,255,0.6)' }}>Service Cost</span>
-              <span className="text-white font-medium">${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span style={{ color: 'rgba(255,255,255,0.6)' }}>Platform Fee ({COMMISSION_RATE}%)</span>
-              <span className="text-white font-medium">${commissionAmount.toFixed(2)}</span>
-            </div>
-            {taxRate > 0 && (
-              <div className="flex justify-between text-sm">
-                <span style={{ color: 'rgba(255,255,255,0.6)' }}>Tax ({taxRate}%)</span>
-                <span className="text-white font-medium">${taxAmount.toFixed(2)}</span>
+          {/* Summary */}
+          <div style={{ background: L.bg2, border: fieldBorder, borderRadius: 14, padding: 16 }} className="space-y-2">
+            {[
+              { label: `Service Cost`, val: `$${subtotal.toFixed(2)}` },
+              { label: `Platform Fee (${COMMISSION_RATE}%)`, val: `$${commissionAmount.toFixed(2)}` },
+              taxRate > 0 && { label: `Tax (${taxRate}%)`, val: `$${taxAmount.toFixed(2)}` },
+              tip > 0 && { label: 'Tip', val: `$${tip.toFixed(2)}` },
+              promoDiscount > 0 && { label: 'Promo Discount', val: `-$${promoDiscount.toFixed(2)}`, green: true },
+            ].filter(Boolean).map(({ label, val, green }) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: green ? '#059669' : L.text2 }}>
+                <span>{label}</span><span style={{ fontWeight: 600, color: green ? '#059669' : L.text }}>{val}</span>
               </div>
-            )}
-            {tip > 0 && (
-              <div className="flex justify-between text-sm">
-                <span style={{ color: 'rgba(255,255,255,0.6)' }}>Tip</span>
-                <span className="text-white font-medium">${tip.toFixed(2)}</span>
-              </div>
-            )}
-            {promoDiscount > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-green-400">Promo Discount</span>
-                <span className="text-green-400 font-medium">-${promoDiscount.toFixed(2)}</span>
-              </div>
-            )}
-            <div className="flex justify-between pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-              <span className="font-semibold text-white">Total</span>
-              <span className="font-bold text-lg" style={{ color: '#cb3c7a' }}>${totalAmount.toFixed(2)}</span>
+            ))}
+            <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, borderTop: fieldBorder }}>
+              <span style={{ fontWeight: 700, color: L.text }}>Total</span>
+              <span style={{ fontWeight: 800, fontSize: 16, color: L.accent }}>${totalAmount.toFixed(2)}</span>
             </div>
-            <p className="text-xs text-center pt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              Paying via <span className="capitalize font-medium" style={{ color: '#cb3c7a' }}>{paymentMethod}</span>
-            </p>
+            <p style={{ fontSize: 11, textAlign: 'center', color: L.text3 }}>Paying via <span style={{ textTransform: 'capitalize', fontWeight: 600, color: L.text }}>{paymentMethod}</span></p>
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full h-12 text-white" style={{ background: '#cb3c7a' }}>
-            {loading ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
-            ) : (
-              'Confirm Booking'
-            )}
+          <Button type="submit" disabled={loading} className="w-full h-12 bg-slate-900 hover:bg-slate-700 text-white">
+            {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</> : 'Confirm Booking'}
           </Button>
         </form>
       </DialogContent>

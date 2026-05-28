@@ -117,7 +117,7 @@ function SalesReport({ orders }) {
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip formatter={v => [`$${v}`, 'Revenue']} />
-                <Line type="monotone" dataKey="revenue" stroke="#cb3c7a" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="revenue" stroke="#7c3aed" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -211,7 +211,7 @@ function CustomerReport({ orders, users }) {
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="count" fill="#cb3c7a" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" fill="#7c3aed" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -371,7 +371,7 @@ function ServicePerformanceReport({ orders, services, providers }) {
               <XAxis dataKey="name" tick={{ fontSize: 9 }} />
               <YAxis tick={{ fontSize: 10 }} />
               <Tooltip />
-              <Bar dataKey="orders" fill="#cb3c7a" radius={[4, 4, 0, 0]} name="Orders" />
+              <Bar dataKey="orders" fill="#7c3aed" radius={[4, 4, 0, 0]} name="Orders" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

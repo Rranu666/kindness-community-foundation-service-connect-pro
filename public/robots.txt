@@ -1,0 +1,28 @@
+User-agent: *
+Allow: /
+Allow: /Browse
+Allow: /ProviderProfile
+Allow: /VoiceRequest
+Allow: /ProviderSignup
+Allow: /Support
+Allow: /TermsAndPrivacy
+Allow: /ReferralProgram
+Disallow: /HomeownerDashboard
+Disallow: /ProviderDashboard
+Disallow: /AdminDashboard
+Disallow: /AdminMultiCity
+Disallow: /Inbox
+Disallow: /Orders
+Disallow: /Favorites
+Disallow: /Wallet
+Disallow: /CustomerProfile
+Disallow: /ProviderAnalytics
+Disallow: /ProviderPayouts
+Disallow: /SubscriptionManagement
+Disallow: /OrderTracking
+
+Crawl-delay: 1
+User-agent: AdsBot-Google
+Allow: /
+
+Sitemap: https://serviceconnectpro.com/sitemap.xml

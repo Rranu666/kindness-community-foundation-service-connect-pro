@@ -5,7 +5,7 @@ import { createPageUrl } from '@/utils';
 import { Badge } from '@/components/ui/badge';
 
 const PINK = '#cb3c7a';
-const CYAN = '#fbbf24';
+const CYAN = '#00d4ff';
 
 export default function ProviderMatchList({ providers, selectedProviders, onToggle, interpretation }) {
   return (
@@ -80,7 +80,7 @@ export default function ProviderMatchList({ providers, selectedProviders, onTogg
                   {provider.tech_stack?.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {provider.tech_stack.slice(0, 3).map(t => (
-                        <span key={t} className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'rgba(251,191,36,0.1)', color: CYAN }}>{t}</span>
+                        <span key={t} className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'rgba(0,212,255,0.1)', color: CYAN }}>{t}</span>
                       ))}
                     </div>
                   )}

@@ -1,75 +1,107 @@
-import { useLocation } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import React from 'react';
+import { useLocation, Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { db, auth, invokeLLM, uploadFile } from '@/api/db';
 import { useQuery } from '@tanstack/react-query';
+import { Compass, Home, ArrowLeft, Search } from 'lucide-react';
 
+const G = {
+  bg: '#080A12', surface: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)',
+  text: '#F0F2FF', muted: 'rgba(240,242,255,0.5)', faint: 'rgba(240,242,255,0.22)',
+  rose: '#FF4D6D', amber: '#FF8C42',
+  grad: 'linear-gradient(135deg, #FF8C42 0%, #FF4D6D 100%)',
+};
 
-export default function PageNotFound({}) {
-    const location = useLocation();
-    const pageName = location.pathname.substring(1);
+export default function PageNotFound() {
+  const location = useLocation();
+  const pageName = location.pathname.substring(1);
 
-    const { data: authData, isFetched } = useQuery({
-        queryKey: ['user'],
-        queryFn: async () => {
-            try {
-                const user = await base44.auth.me();
-                return { user, isAuthenticated: true };
-            } catch (error) {
-                return { user: null, isAuthenticated: false };
-            }
-        }
-    });
-    
-    return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-            <div className="max-w-md w-full">
-                <div className="text-center space-y-6">
-                    {/* 404 Error Code */}
-                    <div className="space-y-2">
-                        <h1 className="text-7xl font-light text-slate-300">404</h1>
-                        <div className="h-0.5 w-16 bg-slate-200 mx-auto"></div>
-                    </div>
-                    
-                    {/* Main Message */}
-                    <div className="space-y-3">
-                        <h2 className="text-2xl font-medium text-slate-800">
-                            Page Not Found
-                        </h2>
-                        <p className="text-slate-600 leading-relaxed">
-                            The page <span className="font-medium text-slate-700">"{pageName}"</span> could not be found in this application.
-                        </p>
-                    </div>
-                    
-                    {/* Admin Note */}
-                    {isFetched && authData.isAuthenticated && authData.user?.role === 'admin' && (
-                        <div className="mt-8 p-4 bg-slate-100 rounded-lg border border-slate-200">
-                            <div className="flex items-start space-x-3">
-                                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center mt-0.5">
-                                    <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                                </div>
-                                <div className="text-left space-y-1">
-                                    <p className="text-sm font-medium text-slate-700">Admin Note</p>
-                                    <p className="text-sm text-slate-600 leading-relaxed">
-                                        This could mean that the AI hasn't implemented this page yet. Ask it to implement it in the chat.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {/* Action Button */}
-                    <div className="pt-6">
-                        <button 
-                            onClick={() => window.location.href = '/'} 
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-                        >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                            Go Home
-                        </button>
-                    </div>
-                </div>
-            </div>
+  const { data: authData, isFetched } = useQuery({
+    queryKey: ['user-404'],
+    queryFn: async () => {
+      try {
+        const user = await auth.me();
+        return { user, isAuthenticated: true };
+      } catch {
+        return { user: null, isAuthenticated: false };
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return (
+    <div style={{
+      minHeight: '100vh', background: G.bg, display: 'flex',
+      alignItems: 'center', justifyContent: 'center',
+      fontFamily: "'Inter', system-ui, sans-serif", padding: 24,
+      position: 'relative', overflow: 'hidden',
+    }}>
+      {/* Ambient */}
+      <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)', width: '60vw', height: '40vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,77,109,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+      <div style={{ maxWidth: 520, width: '100%', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+
+        {/* Giant 404 */}
+        <div style={{
+          fontSize: 'clamp(6rem, 20vw, 10rem)', fontWeight: 900,
+          lineHeight: 1, letterSpacing: '-0.06em',
+          background: G.grad, WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          marginBottom: 8, userSelect: 'none',
+        }}>
+          404
         </div>
-    )
+
+        <div style={{
+          width: 72, height: 72, borderRadius: '50%',
+          background: `${G.rose}12`, border: `1px solid ${G.rose}25`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 24px',
+        }}>
+          <Compass size={32} style={{ color: G.rose }} />
+        </div>
+
+        <h2 style={{ fontSize: 26, fontWeight: 900, color: G.text, marginBottom: 12, letterSpacing: '-0.03em' }}>
+          Page not found
+        </h2>
+        <p style={{ fontSize: 15, color: G.muted, lineHeight: 1.7, marginBottom: 8 }}>
+          The page{pageName ? ` "${pageName}"` : ''} doesn't exist or has been moved.
+        </p>
+
+        {isFetched && authData?.isAuthenticated && authData?.user?.role === 'admin' && (
+          <div style={{
+            margin: '20px 0', padding: '14px 18px',
+            borderRadius: 14, background: `${G.amber}10`,
+            border: `1px solid ${G.amber}25`, textAlign: 'left',
+          }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: G.amber, marginBottom: 4 }}>Admin Note</p>
+            <p style={{ fontSize: 12, color: G.muted, lineHeight: 1.6 }}>
+              This page may not be implemented yet. Ask AI to build it in the chat.
+            </p>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 28, flexWrap: 'wrap' }}>
+          <a href="/" style={{
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '11px 22px', borderRadius: 12,
+            background: G.grad, border: 'none', color: '#fff',
+            fontWeight: 700, fontSize: 14, cursor: 'pointer',
+            textDecoration: 'none', boxShadow: '0 4px 16px rgba(255,77,109,0.35)',
+          }}>
+            <Home size={15} /> Go Home
+          </a>
+          <Link to={createPageUrl('Browse')} style={{
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '11px 22px', borderRadius: 12,
+            background: G.surface, border: `1px solid ${G.border}`,
+            color: G.muted, fontWeight: 600, fontSize: 14,
+            cursor: 'pointer', textDecoration: 'none',
+          }}>
+            <Search size={15} /> Browse Services
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 }

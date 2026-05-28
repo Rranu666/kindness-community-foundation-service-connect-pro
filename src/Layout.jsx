@@ -1,64 +1,154 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { toast } from 'sonner';
-import { Menu, X, LayoutDashboard, LogOut, Home, Search, Building2, HelpCircle, Globe, Briefcase, CreditCard } from 'lucide-react';
+import { db, auth, invokeLLM, uploadFile } from '@/api/db';
+import { useAuth } from '@/lib/AuthContext';
+import {
+  Menu, X, LogOut, Home, Search, Building2, HelpCircle,
+  Briefcase, LayoutDashboard, Mic,
+  MapPin, BadgeCheck, Shield, ChevronDown, Phone, Mail, Heart, MessageCircle, BookOpen
+} from 'lucide-react';
 import Logo from '@/components/Logo';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import BottomTabNavigation from '@/components/mobile/BottomTabNavigation';
 import { Toaster } from "@/components/ui/sonner";
-import { useAuth } from '@/lib/AuthContext';
+import { THEME as L } from '@/lib/theme';
 
-const LANGUAGES = [
-  { code: 'en', label: 'English', dir: 'ltr' },
-  { code: 'ar', label: 'العربية', dir: 'rtl' },
-  { code: 'fr', label: 'Français', dir: 'ltr' },
-  { code: 'es', label: 'Español', dir: 'ltr' },
-  { code: 'sw', label: 'Kiswahili', dir: 'ltr' },
+const NAV_LINKS = [
+  { label: 'Services', page: 'Browse' },
+  { label: 'Voice Match', page: 'VoiceRequest' },
+  { label: 'For Providers', page: 'ProviderSignup' },
+  { label: 'Support', page: 'Support' },
+  { label: 'Blog', page: 'Blog' },
 ];
 
+const USER_MENU_ITEMS = [
+  { label: 'My Dashboard', page: 'HomeownerDashboard', icon: LayoutDashboard },
+  { label: 'My Profile', page: 'CustomerProfile', icon: LayoutDashboard },
+  { label: 'Messages', page: 'Inbox', icon: MessageCircle },
+  { label: 'My Orders', page: 'Orders', icon: Briefcase },
+  { label: 'My Favorites', page: 'Favorites', icon: Heart },
+  { label: 'Provider Dashboard', page: 'ProviderDashboard', icon: Building2 },
+];
+
+function Footer() {
+  return (
+    <footer style={{ background: L.bg2, borderTop: `1px solid ${L.border}`, fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 32px' }}>
+        <div style={{ display: 'grid', gap: 48, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+
+          {/* Brand */}
+          <div>
+            <div style={{ marginBottom: 16 }}>
+              <Logo size="sm" />
+            </div>
+            <p style={{ fontSize: 13, color: L.text3, lineHeight: 1.7, fontWeight: 300, marginBottom: 20 }}>
+              California's most trusted home services marketplace.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <a href="tel:+19499963051" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: L.text3, textDecoration: 'none', transition: 'color 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.color = L.text}
+                onMouseLeave={e => e.currentTarget.style.color = L.text3}>
+                <Phone size={13} /> (949) 996-3051
+              </a>
+              <a href="mailto:contact@kindnesscommunityfoundation.com" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: L.text3, textDecoration: 'none', transition: 'color 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.color = L.text}
+                onMouseLeave={e => e.currentTarget.style.color = L.text3}>
+                <Mail size={13} /> Contact us
+              </a>
+            </div>
+          </div>
+
+          {/* Services */}
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: L.text3, marginBottom: 16 }}>Services</p>
+            {[
+              { label: 'Plumbing', page: 'PlumbingServices' },
+              { label: 'HVAC', page: 'HVACServices' },
+              { label: 'Cleaning', page: 'CleaningServices' },
+              { label: 'Emergency Repairs', page: 'EmergencyRepairs' },
+              { label: 'Recurring', page: 'RecurringServices' },
+            ].map(({ label, page }) => (
+              <Link key={page} to={createPageUrl(page)}
+                style={{ display: 'block', fontSize: 13, color: L.text3, marginBottom: 8, textDecoration: 'none', fontWeight: 300, transition: 'color 0.2s' }}
+                onMouseEnter={e => e.target.style.color = L.text}
+                onMouseLeave={e => e.target.style.color = L.text3}>{label}</Link>
+            ))}
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: L.text3, marginBottom: 16 }}>Platform</p>
+            {[
+              { l: 'Browse', p: 'Browse' },
+              { l: 'Voice Match', p: 'VoiceRequest' },
+              { l: 'For Providers', p: 'ProviderSignup' },
+              { l: 'Blog', p: 'Blog' },
+              { l: 'Support', p: 'Support' },
+            ].map(({ l, p }) => (
+              <Link key={p} to={createPageUrl(p)}
+                style={{ display: 'block', fontSize: 13, color: L.text3, marginBottom: 8, textDecoration: 'none', fontWeight: 300, transition: 'color 0.2s' }}
+                onMouseEnter={e => e.target.style.color = L.text}
+                onMouseLeave={e => e.target.style.color = L.text3}>{l}</Link>
+            ))}
+          </div>
+
+          {/* Legal */}
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: L.text3, marginBottom: 16 }}>Legal</p>
+            {[
+              { l: 'Terms & Privacy', p: 'TermsAndPrivacy' },
+              { l: 'About Us', p: 'About' },
+              { l: 'Trust & Safety', p: 'Support' },
+            ].map(({ l, p }) => (
+              <Link key={p} to={createPageUrl(p)}
+                style={{ display: 'block', fontSize: 13, color: L.text3, marginBottom: 8, textDecoration: 'none', fontWeight: 300, transition: 'color 0.2s' }}
+                onMouseEnter={e => e.target.style.color = L.text}
+                onMouseLeave={e => e.target.style.color = L.text3}>{l}</Link>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ borderTop: `1px solid ${L.border}`, marginTop: 40, paddingTop: 24, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+          <p style={{ fontSize: 12, color: L.text3 }}>© {new Date().getFullYear()} Service Connect Pro · KCF LLC · <a href="https://kindnesscommunityfoundation.com/" style={{ color: L.text3, textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = L.text} onMouseLeave={e => e.target.style.color = L.text3}>Kindness Community Foundation</a> · All rights reserved</p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[{ icon: BadgeCheck, label: 'Verified', c: L.blue }, { icon: Shield, label: 'Secure', c: L.green }].map(({ icon: Icon, label, c }) => (
+              <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: L.text3, background: L.bg3, border: `1px solid ${L.border}`, borderRadius: 100, padding: '4px 10px' }}>
+                <Icon size={10} style={{ color: c }} /> {label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 export default function Layout({ children, currentPageName }) {
+  // Use shared AuthContext — no separate auth.me() call needed
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [langMenuOpen, setLangMenuOpen] = useState(false);
-  const [selectedLang, setSelectedLang] = useState(() => document.documentElement.lang || 'en');
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  useEffect(() => { setMobileOpen(false); }, [location]);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', fn, { passive: true });
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
 
   useEffect(() => {
-    toast.dismiss();
-  }, [location.pathname]);
+    const fn = () => setUserMenuOpen(false);
+    document.addEventListener('click', fn);
+    return () => document.removeEventListener('click', fn);
+  }, []);
 
-  const handleLangChange = (code) => {
-    setSelectedLang(code);
-    setLangMenuOpen(false);
-    const lang = LANGUAGES.find(l => l.code === code);
-    document.documentElement.setAttribute('dir', lang?.dir || 'ltr');
-    document.documentElement.setAttribute('lang', code);
-    if (code !== 'en') {
-      toast.info('Full translations coming soon. The interface is currently in English.');
-    }
-  };
-
-  const currentLang = LANGUAGES.find(l => l.code === selectedLang);
-
-  const hideLayout = ['Home', 'Login', 'AdminDashboard'].includes(currentPageName);
+  const hideLayout = currentPageName === 'Home';
 
   if (hideLayout) {
     return (
       <>
-        <style>{`
-          :root {
-            --kcf-dark: #0f0900;
-            --kcf-darker: #080500;
-            --kcf-pink: #cb3c7a;
-            --kcf-pink-light: #fb923c;
-            --kcf-card: #140b00;
-            --kcf-border: rgba(203,60,122,0.2);
-          }
-        `}</style>
         {children}
         <Toaster position="top-right" />
       </>
@@ -66,226 +156,168 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0f0900', color: '#fff' }}>
-      <style>{`
-        :root {
-          --kcf-dark: #0f0900;
-          --kcf-darker: #080500;
-          --kcf-pink: #cb3c7a;
-          --kcf-pink-light: #fb923c;
-          --kcf-card: #140b00;
-          --kcf-border: rgba(203,60,122,0.2);
-        }
-      `}</style>
+    <div style={{ minHeight: '100vh', background: L.bg, color: L.text, fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
 
-      {/* Navigation */}
-      <nav style={{ background: 'rgba(15,9,0,0.95)', borderBottom: '1px solid rgba(203,60,122,0.2)' }} className="sticky top-0 z-50 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to={createPageUrl('Home')} className="flex items-center">
-              <Logo size="md" />
-            </Link>
+      {/* ── NAVBAR ── */}
+      <header style={{
+        position: 'sticky', top: 0, zIndex: 100,
+        background: scrolled ? 'rgba(255,255,255,0.97)' : 'rgba(255,255,255,0.85)',
+        borderBottom: `1px solid ${scrolled ? L.border : 'transparent'}`,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        transition: 'all 0.3s ease',
+        boxShadow: scrolled ? '0 1px 20px rgba(0,0,0,0.06)' : 'none',
+      }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(12px, 2vw, 32px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 68, minHeight: 68, gap: 12, flexWrap: 'wrap' }}>
 
-            {/* Desktop Nav */}
-            <div className="hidden md:flex items-center gap-6">
-              {[
-                { label: 'Home', page: 'Home' },
-                { label: 'Find Services', page: 'Browse' },
-                { label: '🎤 Voice Request', page: 'VoiceRequest' },
-                { label: 'List Your Services', page: 'ProviderSignup' },
-                { label: 'Support', page: 'Support' },
-              ].map(({ label, page }) => (
-                <Link
-                  key={page}
-                  to={createPageUrl(page)}
-                  className="text-sm font-medium transition-colors"
-                  style={{ color: currentPageName === page ? '#cb3c7a' : 'rgba(255,255,255,0.7)' }}
-                  onMouseEnter={e => e.target.style.color = '#cb3c7a'}
-                  onMouseLeave={e => e.target.style.color = currentPageName === page ? '#cb3c7a' : 'rgba(255,255,255,0.7)'}
-                >
-                  {label}
+          <Link to={createPageUrl('Home')} style={{ textDecoration: 'none' }}>
+            <Logo size="sm" />
+          </Link>
+
+          {/* Desktop nav */}
+          <nav style={{ display: 'none', alignItems: 'center', gap: 'clamp(2px, 1vw, 8px)' }} className="md:flex">
+            {NAV_LINKS.map(({ label, page }) => {
+              const active = currentPageName === page;
+              return (
+                <Link key={page} to={createPageUrl(page)} style={{ textDecoration: 'none' }}>
+                  <span style={{
+                    display: 'block', padding: 'clamp(6px 10px, 1vw, 8px 16px)', borderRadius: 10,
+                    fontSize: 'clamp(12px, 1.8vw, 14px)', fontWeight: active ? 600 : 400,
+                    color: active ? L.text : L.text2,
+                    background: active ? L.bg3 : 'transparent',
+                    border: `1px solid ${active ? L.border2 : 'transparent'}`,
+                    transition: 'all 0.2s', cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}
+                    onMouseEnter={e => { if (!active) { e.target.style.color = L.text; e.target.style.background = L.bg3; } }}
+                    onMouseLeave={e => { if (!active) { e.target.style.color = L.text2; e.target.style.background = 'transparent'; } }}>
+                    {label}
+                  </span>
                 </Link>
-              ))}
-            </div>
+              );
+            })}
+          </nav>
 
-            {/* User Menu */}
-            <div className="flex items-center gap-3">
-              {/* Notifications */}
-              {user && <NotificationCenter />}
+          {/* Right cluster */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {user && <NotificationCenter />}
 
-              {/* Language Switcher */}
-              <div className="relative hidden md:block">
-                <button
-                  onClick={() => setLangMenuOpen(o => !o)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium"
-                  style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}
-                >
-                  <Globe className="w-3.5 h-3.5" />
-                  <span>{currentLang?.label}</span>
+            {user ? (
+              <div style={{ position: 'relative' }} className="hidden md:block">
+                <button onClick={e => { e.stopPropagation(); setUserMenuOpen(o => !o); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px 6px 6px', borderRadius: 100, background: L.bg3, border: `1px solid ${L.border}`, color: L.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = L.border2}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = L.border}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: L.text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>
+                    {user.full_name?.charAt(0) || user.email?.charAt(0)}
+                  </div>
+                  <span style={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.full_name?.split(' ')[0] || 'Account'}
+                  </span>
+                  <ChevronDown size={12} style={{ color: L.text3, transform: userMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
                 </button>
-                {langMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 rounded-xl overflow-hidden shadow-xl z-50" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.25)' }}>
-                    {LANGUAGES.map(lang => (
-                      <button
-                        key={lang.code}
-                        className="w-full text-left px-4 py-2.5 text-sm"
-                        style={{
-                          color: lang.code === selectedLang ? '#cb3c7a' : 'rgba(255,255,255,0.75)',
-                          background: lang.code === selectedLang ? 'rgba(203,60,122,0.1)' : 'transparent',
-                          fontWeight: lang.code === selectedLang ? 600 : 400,
-                        }}
-                        onClick={() => handleLangChange(lang.code)}
-                      >
-                        {lang.label}
+
+                {userMenuOpen && (
+                  <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 210, borderRadius: 16, overflow: 'hidden', background: '#fff', border: `1px solid ${L.border}`, zIndex: 200, boxShadow: '0 16px 48px rgba(0,0,0,0.10)' }}>
+                    <div style={{ padding: '14px 16px 12px', borderBottom: `1px solid ${L.border}` }}>
+                      <p style={{ fontWeight: 700, fontSize: 13, color: L.text, marginBottom: 2 }}>{user.full_name}</p>
+                      <p style={{ fontSize: 11, color: L.text3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
+                    </div>
+                    <div style={{ padding: '6px 0' }}>
+                      {[...USER_MENU_ITEMS, ...(user.role === 'admin' ? [{ label: 'Admin Dashboard', page: 'AdminDashboard', icon: LayoutDashboard }] : [])].map(({ label, page, icon: Icon }) => (
+                        <Link key={page} to={createPageUrl(page)} onClick={() => setUserMenuOpen(false)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', fontSize: 13, color: L.text2, textDecoration: 'none', transition: 'all 0.15s' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = L.bg3; e.currentTarget.style.color = L.text; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = L.text2; }}>
+                          <Icon size={13} style={{ color: L.text3, flexShrink: 0 }} /> {label}
+                        </Link>
+                      ))}
+                    </div>
+                    <div style={{ borderTop: `1px solid ${L.border}`, padding: '6px 0 4px' }}>
+                      <button onClick={() => logout()}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', fontSize: 13, color: L.accent, background: 'none', border: 'none', cursor: 'pointer', width: '100%', transition: 'background 0.15s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = `${L.accent}08`}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        <LogOut size={13} /> Logout
                       </button>
-                    ))}
+                    </div>
                   </div>
                 )}
               </div>
+            ) : (
+              <div style={{ display: 'none', alignItems: 'center', gap: 8 }} className="md:flex">
+                <button onClick={() => auth.redirectToLogin(window.location.href)}
+                  style={{ padding: '8px 16px', borderRadius: 100, background: 'none', border: `1px solid ${L.border2}`, color: L.text2, fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.color = L.text; e.currentTarget.style.borderColor = L.text; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = L.text2; e.currentTarget.style.borderColor = L.border2; }}>
+                  Sign in
+                </button>
+                <Link to={createPageUrl('Browse')}>
+                  <button style={{ padding: '8px 20px', borderRadius: 100, background: L.text, border: 'none', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#222'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = L.text; e.currentTarget.style.transform = 'none'; }}>
+                    Book now
+                  </button>
+                </Link>
+              </div>
+            )}
 
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10">
-                      <Avatar className="w-8 h-8">
-                        <AvatarFallback style={{ background: '#cb3c7a', color: '#fff' }}>
-                          {user.full_name?.charAt(0) || user.email?.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="hidden sm:block text-sm font-medium">
-                        {user.full_name || user.email}
-                      </span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 [&_[role=menuitem]]:focus:bg-white/10 [&_[role=menuitem]]:hover:bg-white/10" style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.3)', color: '#fff' }}>
-                    <DropdownMenuItem asChild>
-                      <Link to={createPageUrl('CustomerProfile')} className="flex items-center text-white hover:text-white">
-                        <LayoutDashboard className="w-4 h-4 mr-2" />
-                        My Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to={createPageUrl('Orders')} className="flex items-center text-white hover:text-white">
-                        <Briefcase className="w-4 h-4 mr-2" />
-                        My Orders
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to={createPageUrl('Wallet')} className="flex items-center text-white hover:text-white">
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Wallet
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator style={{ background: 'rgba(203,60,122,0.2)' }} />
-                    <DropdownMenuItem asChild>
-                      <Link to={createPageUrl('ProviderDashboard')} className="flex items-center text-white hover:text-white">
-                        <Building2 className="w-4 h-4 mr-2" />
-                        Provider Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to={createPageUrl('ProviderPayouts')} className="flex items-center text-white hover:text-white">
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Payouts
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to={createPageUrl('SubscriptionManagement')} className="flex items-center text-white hover:text-white">
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Subscription Plans
-                      </Link>
-                    </DropdownMenuItem>
-                    {user.role === 'admin' && (
-                      <>
-                        <DropdownMenuItem asChild>
-                          <Link to={createPageUrl('AdminDashboard')} className="flex items-center text-white hover:text-white">
-                            <LayoutDashboard className="w-4 h-4 mr-2" />
-                            Admin Dashboard
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link to={createPageUrl('AdminMultiCity')} className="flex items-center text-white hover:text-white">
-                            <LayoutDashboard className="w-4 h-4 mr-2" />
-                            City Configuration
-                          </Link>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    <DropdownMenuSeparator style={{ background: 'rgba(203,60,122,0.2)' }} />
-                    <DropdownMenuItem onClick={() => logout()} className="text-white hover:text-white cursor-pointer">
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button
-                  onClick={() => navigate('/Login')}
-                  style={{ background: '#cb3c7a', border: 'none' }}
-                  className="hover:opacity-90 text-white"
-                >
-                  Sign In
-                </Button>
-              )}
-
-              {/* Mobile menu button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden text-white hover:bg-white/10"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </Button>
-            </div>
+            {/* Mobile hamburger */}
+            <button className="md:hidden" onClick={() => setMobileOpen(o => !o)}
+              style={{ background: L.bg3, border: `1px solid ${L.border}`, borderRadius: 10, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: L.text, cursor: 'pointer' }}>
+              {mobileOpen ? <X size={17} /> : <Menu size={17} />}
+            </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div style={{ background: '#140b00', borderTop: '1px solid rgba(203,60,122,0.2)' }} className="md:hidden pb-4">
-            <div className="px-4 pt-2 space-y-1">
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div style={{ background: '#fff', borderTop: `1px solid ${L.border}`, padding: '10px 16px 16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {[
                 { label: 'Home', page: 'Home', icon: Home },
-                { label: 'Find Services', page: 'Browse', icon: Search },
-                { label: '🎤 Voice Request', page: 'VoiceRequest', icon: null },
-                { label: 'List Your Services', page: 'ProviderSignup', icon: Building2 },
+                { label: 'Browse Services', page: 'Browse', icon: Search },
+                { label: 'Blog', page: 'Blog', icon: BookOpen },
+                { label: 'Voice Match', page: 'VoiceRequest', icon: Mic },
+                { label: 'For Providers', page: 'ProviderSignup', icon: Building2 },
                 { label: 'Support', page: 'Support', icon: HelpCircle },
               ].map(({ label, page, icon: Icon }) => (
-                <Link
-                  key={page}
-                  to={createPageUrl(page)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium"
-                  style={{
-                    color: currentPageName === page ? '#cb3c7a' : 'rgba(255,255,255,0.8)',
-                    background: currentPageName === page ? 'rgba(203,60,122,0.08)' : 'transparent',
-                  }}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {Icon && <Icon className="w-5 h-5 flex-shrink-0" style={{ color: '#cb3c7a' }} />}
-                  {label}
+                <Link key={page} to={createPageUrl(page)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px', borderRadius: 10, color: currentPageName === page ? L.text : L.text2, background: currentPageName === page ? L.bg3 : 'transparent', textDecoration: 'none', fontSize: 14, fontWeight: currentPageName === page ? 600 : 400, transition: 'all 0.2s' }}>
+                  <Icon size={15} style={{ color: currentPageName === page ? L.text : L.text3 }} /> {label}
                 </Link>
               ))}
-              {/* Mobile user actions if not logged in */}
-              {!user && (
-                <div className="pt-3 pb-1 border-t mt-2" style={{ borderColor: 'rgba(203,60,122,0.2)' }}>
-                  <Link to={createPageUrl('Login')} onClick={() => setMobileMenuOpen(false)}>
-                    <div className="flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white"
-                      style={{ background: '#cb3c7a' }}>
-                      Sign In
+            </div>
+            <div style={{ borderTop: `1px solid ${L.border}`, marginTop: 10, paddingTop: 10 }}>
+              {user ? (
+                <div>
+                  <div style={{ padding: '8px 12px 10px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 10, background: L.text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 13 }}>
+                      {user.full_name?.charAt(0)}
                     </div>
-                  </Link>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: L.text }}>{user.full_name}</p>
+                      <p style={{ fontSize: 11, color: L.text3 }}>{user.email}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => logout()}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 10, background: `${L.accent}08`, border: `1px solid ${L.accent}20`, color: L.accent, fontSize: 13, fontWeight: 600, cursor: 'pointer', width: '100%' }}>
+                    <LogOut size={14} /> Sign Out
+                  </button>
                 </div>
+              ) : (
+                <button onClick={() => auth.redirectToLogin(window.location.href)}
+                  style={{ width: '100%', padding: '12px', borderRadius: 100, background: L.text, border: 'none', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+                  Sign In to Continue
+                </button>
               )}
             </div>
           </div>
         )}
-      </nav>
+      </header>
 
-      {/* Page Content */}
-      <main>{children}</main>
-
+      <main style={{ flex: 1, paddingBottom: 'env(safe-area-inset-bottom)' }} className="md:pb-0">{children}</main>
+      <Footer />
+      <BottomTabNavigation currentPageName={currentPageName} />
       <Toaster position="top-right" />
     </div>
   );

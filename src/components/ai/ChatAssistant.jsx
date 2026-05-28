@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db, auth, invokeLLM, uploadFile } from '@/api/db';
 import { Send, Loader2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
+
+const L = {
+  bg: '#ffffff',
+  bg2: '#f7f7f5',
+  border: '#e2e0dc',
+  text: '#111111',
+  text2: '#555555',
+  text3: '#999999',
+  rose: '#FF4D6D',
+  blue: '#4361EE',
+};
 
 export default function ChatAssistant({ context = 'general_help' }) {
   const [user, setUser] = useState(null);
@@ -15,45 +26,41 @@ export default function ChatAssistant({ context = 'general_help' }) {
   const [conversationId] = useState(uuidv4());
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    auth.me().then(setUser).catch(() => {});
   }, []);
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !user) return;
 
     const userMessage = {
-      user_email: user?.email || 'guest',
+      user_email: user.email,
       conversation_id: conversationId,
       role: 'user',
       content: input,
       context
     };
 
-    // Save user message only if logged in
-    if (user) {
-      await base44.entities.ChatMessage.create(userMessage);
-    }
+    // Save user message
+    await db.ChatMessage.create(userMessage);
     setMessages(prev => [...prev, { ...userMessage, id: Date.now() }]);
     setInput('');
     setLoading(true);
 
     try {
       // Get AI response
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await invokeLLM({
         prompt: `You are a helpful customer service assistant for a service marketplace. Context: ${context}\n\nUser: ${input}\n\nProvide a concise, helpful response.`
       });
 
       const assistantMessage = {
-        user_email: user?.email || 'guest',
+        user_email: user.email,
         conversation_id: conversationId,
         role: 'assistant',
         content: response,
         context
       };
 
-      if (user) {
-        await base44.entities.ChatMessage.create(assistantMessage);
-      }
+      await db.ChatMessage.create(assistantMessage);
       setMessages(prev => [...prev, { ...assistantMessage, id: Date.now() + 1 }]);
     } catch (error) {
       toast.error('Failed to get response');
@@ -65,83 +72,93 @@ export default function ChatAssistant({ context = 'general_help' }) {
   const markHelpful = async (messageId, isHelpful) => {
     const messageIndex = messages.findIndex(m => m.id === messageId);
     if (messageIndex !== -1) {
-      await base44.entities.ChatMessage.update(messages[messageIndex].id, { is_helpful: isHelpful });
+      await db.ChatMessage.update(messages[messageIndex].id, { is_helpful: isHelpful });
       toast.success(isHelpful ? 'Thanks for the feedback!' : 'We appreciate the feedback');
     }
   };
 
   return (
-    <div
-      style={{ background: '#140b00', border: '1px solid rgba(203,60,122,0.2)' }}
-      className="rounded-lg flex flex-col h-96"
-    >
+    <div style={{ background: L.bg2, border: `1px solid ${L.border}`, borderRadius: 20, display: 'flex', flexDirection: 'column', height: 400, fontFamily: "'Inter', system-ui, sans-serif" }}>
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {messages.map((message) => (
-          <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className="max-w-xs rounded-lg px-4 py-2"
-              style={{
-                background: message.role === 'user' ? '#cb3c7a' : 'rgba(255,255,255,0.1)',
-                color: '#fff'
-              }}
-            >
-              <p className="text-sm">{message.content}</p>
+          <div key={message.id} style={{ display: 'flex', justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start' }}>
+            <div style={{
+              maxWidth: '70%',
+              borderRadius: 14,
+              padding: '10px 14px',
+              background: message.role === 'user' ? L.rose : L.bg,
+              border: message.role === 'user' ? 'none' : `1px solid ${L.border}`,
+              color: message.role === 'user' ? '#fff' : L.text,
+            }}>
+              <p style={{ fontSize: 14, lineHeight: 1.5 }}>{message.content}</p>
               {message.role === 'assistant' && (
-                <div className="flex gap-1 mt-2">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-5 w-5 text-white hover:bg-white/20"
-                    onClick={() => markHelpful(message.id, true)}
-                  >
-                    <ThumbsUp className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-5 w-5 text-white hover:bg-white/20"
-                    onClick={() => markHelpful(message.id, false)}
-                  >
-                    <ThumbsDown className="w-3 h-3" />
-                  </Button>
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <button onClick={() => markHelpful(message.id, true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                    <ThumbsUp size={14} style={{ color: L.text3 }} />
+                  </button>
+                  <button onClick={() => markHelpful(message.id, false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                    <ThumbsDown size={14} style={{ color: L.text3 }} />
+                  </button>
                 </div>
               )}
             </div>
           </div>
         ))}
         {loading && (
-          <div className="flex justify-start">
-            <div className="bg-white/10 rounded-lg px-4 py-2">
-              <Skeleton className="h-4 w-32" />
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <div style={{ background: L.bg, border: `1px solid ${L.border}`, borderRadius: 14, padding: '10px 14px' }}>
+              <div style={{ width: 32, height: 4, borderRadius: 2, background: L.border, animation: 'pulse 1s infinite' }} />
             </div>
           </div>
         )}
       </div>
 
       {/* Input */}
-      <div className="border-t p-3" style={{ borderColor: 'rgba(203,60,122,0.2)' }}>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Ask me anything..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-            style={{ background: '#0f0900', borderColor: 'rgba(203,60,122,0.2)', color: '#fff' }}
-            className="text-white"
-            disabled={loading}
-          />
-          <Button
-            size="icon"
-            style={{ background: '#cb3c7a' }}
-            className="text-white hover:opacity-90"
-            onClick={handleSendMessage}
-            disabled={loading || !input.trim()}
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          </Button>
-        </div>
+      <div style={{ borderTop: `1px solid ${L.border}`, padding: 12, display: 'flex', gap: 8 }}>
+        <input
+          placeholder="Ask me anything..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+          disabled={loading}
+          style={{
+            flex: 1,
+            height: 40,
+            borderRadius: 12,
+            padding: '0 12px',
+            border: `1px solid ${L.border}`,
+            background: L.bg,
+            color: L.text,
+            fontSize: 14,
+            outline: 'none',
+            transition: 'border-color 0.2s',
+          }}
+          onFocus={e => e.target.style.borderColor = L.blue}
+          onBlur={e => e.target.style.borderColor = L.border}
+        />
+        <button
+          onClick={handleSendMessage}
+          disabled={loading || !input.trim()}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            border: 'none',
+            background: L.rose,
+            color: '#fff',
+            cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+            opacity: loading || !input.trim() ? 0.5 : 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'opacity 0.2s',
+          }}
+        >
+          {loading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={16} />}
+        </button>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
