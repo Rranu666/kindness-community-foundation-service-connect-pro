@@ -136,10 +136,10 @@ export default function BlogArticle() {
                   {new Date(post.published_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
               )}
-              {post.read_time_minutes && (
+              {(post.read_time || post.read_time_minutes) && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Clock size={16} />
-                  {post.read_time_minutes} min read
+                  {post.read_time || post.read_time_minutes} min read
                 </div>
               )}
               {post.views && (
